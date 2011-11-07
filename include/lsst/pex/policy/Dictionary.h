@@ -37,9 +37,6 @@
 #include <boost/regex.hpp>
 #include <sstream>
 
-namespace pexExcept = lsst::pex::exceptions;
-namespace dafBase = lsst::daf::base;
-
 namespace lsst {
 namespace pex {
 namespace policy {
@@ -55,7 +52,7 @@ class PolicyFile;
  * Policy Dictionary.  Each error is represented by an enumeration constant
  * which maps to an error message.  
  */
-class ValidationError : public pexExcept::LogicErrorException {
+class ValidationError : public lsst::pex::exceptions::LogicErrorException {
 public:
 
     /**
@@ -154,19 +151,19 @@ public:
      * create an empty ValidationError message
      */
     ValidationError(char const* ex_file, int ex_line, char const* ex_func) 
-	: pexExcept::LogicErrorException(ex_file, ex_line, ex_func,
-					 "Policy has unknown validation errors"), 
+	: lsst::pex::exceptions::LogicErrorException(ex_file, ex_line, ex_func,
+					             "Policy has unknown validation errors"), 
        _errors() 
     { }
 
-    virtual pexExcept::Exception *clone() const;
+    virtual lsst::pex::exceptions::Exception *clone() const;
     virtual char const *getType(void) const throw();
 
     /**
      * Copy constructor.
      */
     ValidationError(const ValidationError& that) 
-	: pexExcept::LogicErrorException(that), _errors(that._errors) 
+	: lsst::pex::exceptions::LogicErrorException(that), _errors(that._errors) 
     { }
 
     ValidationError& operator=(const ValidationError& that) {
@@ -177,8 +174,8 @@ public:
 
 // Swig is having trouble with this macro
 //    ValidationError(POL_EARGS_TYPED) 
-//       : pexExcept::LogicErrorException(POL_EARGS_UNTYPED, 
-//                                        "policy has unknown validation errors"), 
+//       : lsst::pex::exceptions::LogicErrorException(POL_EARGS_UNTYPED, 
+//                                                    "policy has unknown validation errors"), 
 //       _errors() 
 //    { }
 
@@ -265,7 +262,7 @@ protected:
  * @brief a convenience container for a single parameter definition from a
  * dictionary.
  */
-class Definition : public dafBase::Citizen {
+class Definition : public lsst::daf::base::Citizen {
 public:
 
     /**
@@ -273,7 +270,7 @@ public:
      * @param paramName   the name of the parameter being defined.
      */
     Definition(const std::string& paramName = "")
-        : dafBase::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
+        : lsst::daf::base::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
 	_name(paramName), _policy(), _wildcard(false)
     {
         _policy.reset(new Policy());
@@ -285,7 +282,7 @@ public:
      * @param defn        the policy containing the definition data
      */
     Definition(const std::string& paramName, const Policy::Ptr& defn) 
-        : dafBase::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
+        : lsst::daf::base::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
           _name(paramName), _policy(defn), _wildcard(false)
     { }
 
@@ -294,7 +291,7 @@ public:
      * @param defn        the policy containing the definition data
      */
     Definition(const Policy::Ptr& defn) 
-        : dafBase::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
+        : lsst::daf::base::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
           _name(), _policy(defn), _wildcard(false)
     { }
 
@@ -302,7 +299,7 @@ public:
      * create a copy of a definition
      */
     Definition(const Definition& that) 
-        : dafBase::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
+        : lsst::daf::base::Citizen(typeid(*this)), _type(Policy::UNDETERMINED), 
           _name(that._name), _policy(that._policy), _wildcard(false)
     { }
 
@@ -884,7 +881,7 @@ public:
      * @return            the number of files loaded
      */
     int loadPolicyFiles(bool strict=true) {
-	return loadPolicyFiles(fs::path(), strict);
+	return loadPolicyFiles(boost::filesystem::path(), strict);
     }
 
     /**
@@ -895,7 +892,8 @@ public:
      *                    the directorywill be assumed to be the current one.
      * @return            the number of files loaded
      */
-    virtual int loadPolicyFiles(const fs::path& repository, bool strict=true);
+    virtual int loadPolicyFiles(const boost::filesystem::path& repository,
+                                bool strict=true);
 
     //@{
     /**

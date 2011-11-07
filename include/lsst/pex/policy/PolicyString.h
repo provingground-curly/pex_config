@@ -42,8 +42,6 @@ namespace lsst {
 namespace pex {
 namespace policy {
 
-namespace dafBase = lsst::daf::base;
-
 /**
  * @brief a representation of a string containing Policy parameter data
  *
@@ -51,7 +49,7 @@ namespace dafBase = lsst::daf::base;
  * especially useful for supporting string I/O from Python.  The data is
  * encoded in a supported format (just like the contents of a policy file).  
  */
-class PolicyString : public PolicySource, public dafBase::Persistable {
+class PolicyString : public PolicySource, public lsst::daf::base::Persistable {
 public:
 
     /**

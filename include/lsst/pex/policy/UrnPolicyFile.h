@@ -37,8 +37,6 @@
 
 #include "lsst/pex/policy/DefaultPolicyFile.h"
 
-namespace fs = boost::filesystem;
-
 namespace lsst {
 namespace pex {
 namespace policy {

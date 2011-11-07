@@ -43,8 +43,6 @@ namespace lsst {
 namespace pex {
 namespace policy {
 
-namespace dafBase = lsst::daf::base;
-
 /**
  * @brief an abstract class representing a source of serialized Policy 
  * parameter data.  This might be a file or a stream; sub-classes handle 
@@ -52,7 +50,7 @@ namespace dafBase = lsst::daf::base;
  * data is in (which may involve reading the first few characters) and 
  * load it into a Policy.
  */
-class PolicySource : public dafBase::Citizen {
+class PolicySource : public lsst::daf::base::Citizen {
 public:
 
     /**
@@ -60,7 +58,7 @@ public:
      * @param fmts   the list of formats to support
      */
     PolicySource(SupportedFormats::Ptr fmts=defaultFormats) 
-        : dafBase::Citizen(typeid(this)), _formats(fmts) 
+        : lsst::daf::base::Citizen(typeid(this)), _formats(fmts) 
     { 
         if (defaultFormats->size() == 0) 
             SupportedFormats::initDefaultFormats(*defaultFormats);

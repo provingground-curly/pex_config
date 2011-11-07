@@ -38,12 +38,10 @@ namespace pex {
 namespace policy {
 namespace paf {
 
-namespace pexPolicy = lsst::pex::policy;
-
 /**
  * An abstract interface for writing policy data to streams
  */
-class PAFWriter : public pexPolicy::PolicyWriter {
+class PAFWriter : public PolicyWriter {
 public: 
 
     /**
@@ -51,7 +49,7 @@ public:
      * @param out     the output stream to write data to
      */
     explicit PAFWriter(std::ostream *out = 0) 
-        : pexPolicy::PolicyWriter(out), _indent() { }
+        : PolicyWriter(out), _indent() { }
 
     /**
      * create a writer attached to an output stream
@@ -60,7 +58,7 @@ public:
      *                  line printed out.  
      */
     PAFWriter(std::ostream *out, const std::string indent) 
-        : pexPolicy::PolicyWriter(out), _indent(indent) 
+        : PolicyWriter(out), _indent(indent) 
     { }
 
     //@{
@@ -69,9 +67,9 @@ public:
      * @param file     the output file
      */
     explicit PAFWriter(const std::string& file) 
-        : pexPolicy::PolicyWriter(file), _indent() { }
+        : PolicyWriter(file), _indent() { }
     explicit PAFWriter(const char *file) 
-        : pexPolicy::PolicyWriter(file), _indent() { }
+        : PolicyWriter(file), _indent() { }
     //@}
 
     /**
@@ -89,17 +87,17 @@ public:
      * @param values   the values to save under that name.
      */
     virtual void writeBools(const std::string& name, 
-                            const pexPolicy::Policy::BoolArray& values);
+                            const Policy::BoolArray& values);
     virtual void writeInts(const std::string& name, 
-                           const pexPolicy::Policy::IntArray& values);
+                           const Policy::IntArray& values);
     virtual void writeDoubles(const std::string& name, 
-                              const pexPolicy::Policy::DoubleArray& values);
+                              const Policy::DoubleArray& values);
     virtual void writeStrings(const std::string& name, 
-                              const pexPolicy::Policy::StringArray& values);
+                              const Policy::StringArray& values);
     virtual void writePolicies(const std::string& name, 
-                              const pexPolicy::Policy::PolicyPtrArray& values);
+                              const Policy::PolicyPtrArray& values);
     virtual void writeFiles(const std::string& name, 
-                            const pexPolicy::Policy::FilePtrArray& values);
+                            const Policy::FilePtrArray& values);
     //@}
 
 protected:

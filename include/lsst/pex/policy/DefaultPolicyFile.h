@@ -38,8 +38,6 @@
 
 #include "lsst/pex/policy/PolicyFile.h"
 
-namespace fs = boost::filesystem;
-
 namespace lsst {
 namespace pex {
 namespace policy {
@@ -100,13 +98,13 @@ public:
      * @exception lsst::pex::exception::NotFoundException  if the 
      *    environement variable is not defined.
      */
-    virtual fs::path getInstallPath(const char* const productName);
+    virtual boost::filesystem::path getInstallPath(const char* const productName);
 
     /**
      * return the full file path to the repository directory where this
      * file will found.  
      */
-    const fs::path& getRepositoryPath() const { return _repos; }
+    const boost::filesystem::path& getRepositoryPath() const { return _repos; }
 
     /**
      * return the file path to the installation directory of a given
@@ -115,7 +113,7 @@ public:
      * PRODUCTNAME_DIR where PRODUCTNAME is the given name of the product 
      * with all letters converted to upper case.  
      */
-    static fs::path installPathFor(const char* const productName);
+    static boost::filesystem::path installPathFor(const char* const productName);
         
 
     /**
@@ -130,7 +128,7 @@ public:
     virtual void load(Policy& policy) const;
 
 private:
-    fs::path _repos;
+    boost::filesystem::path _repos;
     bool _strict;
 };
 

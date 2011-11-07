@@ -36,15 +36,15 @@
 #include <string>
 #include <set>
 
+namespace pexExcept = lsst::pex::exceptions;
+namespace fs = boost::filesystem;
+
 namespace lsst {
 namespace pex {
 namespace policy {
 
 //@cond
 
-using boost::regex;
-using boost::sregex_token_iterator;
-using boost::scoped_ptr;
 using namespace std;
 using namespace boost;
 

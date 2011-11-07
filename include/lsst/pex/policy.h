@@ -32,5 +32,7 @@
 #include "lsst/pex/policy/DefaultPolicyFile.h"
 #include "lsst/pex/policy/paf/PAFWriter.h"
 #include "lsst/pex/policy/UrnPolicyFile.h"
+#include "lsst/pex/policy/PolicyStreamDestination.h"
+#include "lsst/pex/policy/PolicyStringDestination.h"
 
 #endif

@@ -49,16 +49,13 @@ namespace lsst {
 namespace pex {
 namespace policy {
 
-namespace fs = boost::filesystem;
-namespace dafBase = lsst::daf::base;
-
 /**
  * @brief a representation of a file containing Policy parameter data.  
  * 
  * When this class represents a file that actually exists on disk, then it 
  * can determine which format it is in and load its contents into a Policy.
  */
-class PolicyFile : public PolicySource, public dafBase::Persistable {
+class PolicyFile : public PolicySource, public lsst::daf::base::Persistable {
 public:
 
     //@{
@@ -80,7 +77,7 @@ public:
                         const SupportedFormats::Ptr& fmts = defaultFormats);
     explicit PolicyFile(const char *filepath, 
                         const SupportedFormats::Ptr& fmts = defaultFormats);
-    explicit PolicyFile(const fs::path& filepath, 
+    explicit PolicyFile(const boost::filesystem::path& filepath, 
                         const SupportedFormats::Ptr& fmts = defaultFormats);
     //@}
 
@@ -97,7 +94,7 @@ public:
      */
     PolicyFile(const std::string& filepath, 
                const PolicyParserFactory::Ptr& parserFactory);
-    PolicyFile(const fs::path& filepath, 
+    PolicyFile(const boost::filesystem::path& filepath, 
                const PolicyParserFactory::Ptr& parserFactory);
     //@}
 
@@ -121,9 +118,11 @@ public:
      * @param fmts           a SupportedFormats object to use.  An instance 
      *                          encapsulates a configured set of known formats.
      */
-    PolicyFile(const std::string& filepath, const fs::path& reposDir,
+    PolicyFile(const std::string& filepath,
+               const boost::filesystem::path& reposDir,
                const SupportedFormats::Ptr& fmts = defaultFormats);
-    PolicyFile(const fs::path& filepath, const fs::path& reposDir,
+    PolicyFile(const boost::filesystem::path& filepath,
+               const boost::filesystem::path& reposDir,
                const SupportedFormats::Ptr& fmts = defaultFormats);
     //@}
 
@@ -143,9 +142,11 @@ public:
      *                          in parsing the file, assuming a particular 
      *                          format.
      */
-    PolicyFile(const std::string& filepath, const fs::path& reposDir,
+    PolicyFile(const std::string& filepath,
+               const boost::filesystem::path& reposDir,
                const PolicyParserFactory::Ptr& parserFactory);
-    PolicyFile(const fs::path& filepath, const fs::path& reposDir,
+    PolicyFile(const boost::filesystem::path& filepath,
+               const boost::filesystem::path& reposDir,
                const PolicyParserFactory::Ptr& parserFactory);
     //@}
 
@@ -177,7 +178,7 @@ public:
     /**
      * return true if the file exists.  
      */
-    bool exists() const {  return fs::exists(_file);  }
+    bool exists() const {  return boost::filesystem::exists(_file);  }
 
     /**
      * return the name of the format that the data is stored in.  This may 
@@ -222,7 +223,7 @@ protected:
     /**
      * the path to the underlying policy file
      */
-    fs::path _file;
+    boost::filesystem::path _file;
 
 private:
     const std::string& cacheName(const std::string& name) {

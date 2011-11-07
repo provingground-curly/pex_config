@@ -33,12 +33,9 @@ Access to the policy classes from the pex module
 
 // Supress warnings
 #pragma SWIG nowarn=314     // print is a python keyword (--> _print)
-#pragma SWIG nowarn=362     // operator= ignored
-#pragma SWIG nowarn=451     // const char* may leak memory
 #pragma SWIG nowarn=509     // overloaded method is shadowed
 
 %{
-#include "boost/filesystem/path.hpp"
 #include "lsst/daf/base.h"
 #include "lsst/pex/policy/exceptions.h"
 #include "lsst/pex/policy/parserexceptions.h"
@@ -51,24 +48,64 @@ Access to the policy classes from the pex module
 #include "lsst/pex/policy/PolicyStreamDestination.h"
 #include "lsst/pex/policy/PolicyStringDestination.h"
 #include "lsst/pex/policy/paf/PAFWriter.h"
-#include <sstream>
 
 using lsst::pex::policy::SupportedFormats;
 using lsst::pex::policy::PolicyParserFactory;
 %}
 
+%include "lsst/p_lsstSwig.i"
+
+%lsst_exceptions()
+
+%import "lsst/pex/exceptions/exceptionsLib.i"    // for Exceptions
+%import "lsst/daf/base/baseLib.i"
+
+%shared_ptr(lsst::pex::policy::Policy);
+%shared_ptr(lsst::pex::policy::Dictionary);
+%shared_ptr(lsst::pex::policy::Definition);
+%shared_ptr(lsst::pex::policy::PolicySource);
+%shared_ptr(lsst::pex::policy::PolicyFile);
+%shared_ptr(lsst::pex::policy::DefaultPolicyFile);
+%shared_ptr(lsst::pex::policy::UrnPolicyFile);
+%shared_ptr(lsst::pex::policy::PolicyString);
+%shared_ptr(lsst::pex::policy::PolicyDestination);
+%shared_ptr(lsst::pex::policy::PolicyStreamDestination);
+%shared_ptr(lsst::pex::policy::PolicyStringDestination);
+
+%newobject lsst::pex::policy::Policy::createPolicy;
+%newobject lsst::pex::policy::Policy::createPolicyFromUrn;
+%newobject lsst::pex::policy::Dictionary::makeDef;
+
+%feature("notabstract") lsst::pex::policy::paf::PAFWriter;
+
+%ignore lsst::pex::policy::Policy::Policy(const Policy& pol);
+%ignore lsst::pex::policy::PolicySource::defaultFormats;
+%ignore lsst::pex::policy::PolicyFile::SPACE_RE;
+%ignore lsst::pex::policy::PolicyFile::COMMENT;
+%ignore lsst::pex::policy::PolicyFile::CONTENTID;
+%ignore lsst::pex::policy::PolicyString::SPACE_RE;
+%ignore lsst::pex::policy::PolicyString::COMMENT;
+%ignore lsst::pex::policy::PolicyString::CONTENTID;
+%ignore lsst::pex::policy::ValidationError::operator=;
+
+%immutable lsst::pex::policy::Dictionary::KW_DICT;
+%immutable lsst::pex::policy::Dictionary::KW_DICT_FILE;
+%immutable lsst::pex::policy::Dictionary::KW_TYPE;
+%immutable lsst::pex::policy::Dictionary::KW_DESCRIPTION;
+%immutable lsst::pex::policy::Dictionary::KW_DEFAULT;
+%immutable lsst::pex::policy::Dictionary::KW_DEFINITIONS;
+%immutable lsst::pex::policy::Dictionary::KW_CHILD_DEF;
+%immutable lsst::pex::policy::Dictionary::KW_ALLOWED;
+%immutable lsst::pex::policy::Dictionary::KW_MIN_OCCUR;
+%immutable lsst::pex::policy::Dictionary::KW_MAX_OCCUR;
+%immutable lsst::pex::policy::Dictionary::KW_MIN;
+%immutable lsst::pex::policy::Dictionary::KW_MAX;
+%immutable lsst::pex::policy::Dictionary::KW_VALUE;
+
+
 %inline %{
 namespace boost { namespace filesystem { } }
 %}
-
-// For now, pex_policy does not use the standard LSST exception classes,
-// so disable the associated SWIG exception handling machinery
-// #define NO_SWIG_LSST_EXCEPTIONS
-
-%include "lsst/p_lsstSwig.i"
-
-%import "lsst/daf/base/baseLib.i"
-%import "lsst/pex/exceptions/exceptionsLib.i"    // for Exceptions
 
 %typemap(out) std::vector<double,std::allocator<double > > {
     int len = ($1).size();
@@ -149,18 +186,14 @@ namespace boost { namespace filesystem { } }
 }
 
 // Tell SWIG that boost::filesystem::path is equivalent to a string for typechecking purposes
-%typemap(typecheck) const lsst::pex::policy::fs::path & = char *;
+%typemap(typecheck) const boost::filesystem::path & = char *;
 
 %typemap(out) const boost::filesystem::path& {
    $result = PyString_FromString($1->string().c_str());
 } 
 
-%typemap(out) const lsst::pex::policy::fs::path& {
-   $result = PyString_FromString($1->string().c_str());
-} 
-
 // Convert Python strings to boost::filesystem::path objects
-%typemap(in) const lsst::pex::policy::fs::path & {
+%typemap(in) const boost::filesystem::path & {
     std::string * temp;
     int cnvRes = SWIG_AsPtr_std_string($input, &temp);
     if (!SWIG_IsOK(cnvRes)) {
@@ -174,31 +207,13 @@ namespace boost { namespace filesystem { } }
 }
 
 // Make sure temporary created above is freed inside wrapper code
-%typemap(freearg) const lsst::pex::policy::fs::path & {
+%typemap(freearg) const boost::filesystem::path & {
     delete $1;
 }
 
 
 %template(NameList) std::list<std::string >;
 
-SWIG_SHARED_PTR(Policy, lsst::pex::policy::Policy)
-SWIG_SHARED_PTR_DERIVED(Dictionary, lsst::pex::policy::Policy, lsst::pex::policy::Dictionary)
-SWIG_SHARED_PTR(Definition, lsst::pex::policy::Definition)
-SWIG_SHARED_PTR(PolicySource, lsst::pex::policy::PolicySource)
-SWIG_SHARED_PTR_DERIVED(PolicyFile, lsst::pex::policy::PolicySource, lsst::pex::policy::PolicyFile)
-SWIG_SHARED_PTR_DERIVED(DefaultPolicyFile, lsst::pex::policy::PolicyFile, lsst::pex::policy::DefaultPolicyFile)
-SWIG_SHARED_PTR_DERIVED(UrnPolicyFile, lsst::pex::policy::PolicyFile, lsst::pex::policy::UrnPolicyFile)
-SWIG_SHARED_PTR_DERIVED(PolicyString, lsst::pex::policy::PolicySource, lsst::pex::policy::PolicyString)
-SWIG_SHARED_PTR(PolicyDestination, lsst::pex::policy::PolicyDestination)
-SWIG_SHARED_PTR_DERIVED(PolicyStreamDestination, lsst::pex::policy::PolicyDestination, lsst::pex::policy::PolicyStreamDestination)
-SWIG_SHARED_PTR_DERIVED(PolicyStringDestination, lsst::pex::policy::PolicyStreamDestination, lsst::pex::policy::PolicyStringDestination)
-
-%newobject lsst::pex::policy::Policy::createPolicy;
-%newobject lsst::pex::policy::Policy::createPolicyFromUrn;
-%newobject lsst::pex::policy::Dictionary::makeDef;
-%feature("notabstract") lsst::pex::policy::paf::PAFWriter;
-
-%ignore lsst::pex::policy::Policy::Policy(const Policy& pol);
 
 %include "lsst/pex/policy/Policy.h"
 %include "lsst/pex/policy/Dictionary.h"
@@ -287,20 +302,11 @@ def _Policy_add(p, name, value):
 Policy.add = _Policy_add
 %}
 
-%ignore lsst::pex::policy::PolicySource::defaultFormats;
-%ignore lsst::pex::policy::PolicyFile::SPACE_RE;
-%ignore lsst::pex::policy::PolicyFile::COMMENT;
-%ignore lsst::pex::policy::PolicyFile::CONTENTID;
-%ignore lsst::pex::policy::PolicyString::SPACE_RE;
-%ignore lsst::pex::policy::PolicyString::COMMENT;
-%ignore lsst::pex::policy::PolicyString::CONTENTID;
 %include "lsst/pex/policy/PolicySource.h"
 %include "lsst/pex/policy/PolicyFile.h"
 %include "lsst/pex/policy/DefaultPolicyFile.h"
 %include "lsst/pex/policy/UrnPolicyFile.h"
 %include "lsst/pex/policy/PolicyString.h"
-#if 0                                   // needed, but needs to propagate up to e.g. afw
 %include "lsst/pex/policy/PolicyDestination.h"
-#endif
 %include "lsst/pex/policy/PolicyStreamDestination.h"
 %include "lsst/pex/policy/PolicyStringDestination.h"
