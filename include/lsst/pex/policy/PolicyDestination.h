@@ -41,8 +41,6 @@ namespace lsst {
 namespace pex {
 namespace policy {
 
-namespace dafBase = lsst::daf::base;
-
 /**
  * a class representing a destination to serialize Policy parameter
  * data to.  This might be a file, a string, or a stream; sub-classes handle 
@@ -50,13 +48,13 @@ namespace dafBase = lsst::daf::base;
  * going to the destination; this is a matter for the PolicyWriter, which 
  * can take a PolicyDestination as a constructor input.
  */
-class PolicyDestination : public dafBase::Citizen {
+class PolicyDestination : public lsst::daf::base::Citizen {
 public:
 
     /**
      * create a destination
      */
-    PolicyDestination() : dafBase::Citizen(typeid(this)) { }
+    PolicyDestination() : lsst::daf::base::Citizen(typeid(this)) { }
 
     /**
      * release resource associated with the destination
@@ -73,7 +71,7 @@ protected:
      * create a copy of this destination
      */
     PolicyDestination(const PolicyDestination& that) 
-        : dafBase::Citizen(typeid(this)) { }
+        : lsst::daf::base::Citizen(typeid(this)) { }
 
 };
 

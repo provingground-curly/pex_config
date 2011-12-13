@@ -48,30 +48,27 @@ namespace pex {
 namespace policy {
 namespace paf {
 
-namespace dafBase = lsst::daf::base;
-namespace pexPolicy = lsst::pex::policy;
-
 /**
  * @brief  a parser for reading PAF-formatted data into a Policy object
  */
-class PAFParser : public pexPolicy::PolicyParser {
+class PAFParser : public PolicyParser {
 public: 
 
     /**
      * create a parser to load a Policy
      * @param policy   the Policy object to load the parsed data into
      */
-    PAFParser(pexPolicy::Policy& policy);
+    PAFParser(Policy& policy);
 
     /**
-     * @copydoc PAFParser(pexPolicy::Policy&)
+     * @copydoc PAFParser(Policy&)
      * @param strict   if true, be strict in reporting errors in file 
      *                   contents and syntax.  If false, errors will be 
      *                   ignored if possible; often, such errors will 
      *                   result in some data not getting loaded.  The 
      *                   default (set by PolicyParser) is true.
      */
-    PAFParser(pexPolicy::Policy& policy, bool strict);
+    PAFParser(Policy& policy, bool strict);
 
     /**
      * delete this parser
@@ -93,9 +90,9 @@ private:
     // push a line back onto the stream
     void _pushBackLine(const std::string& line);
 
-    int _parseIntoPolicy(std::istream& is, pexPolicy::Policy& policy);
+    int _parseIntoPolicy(std::istream& is, Policy& policy);
     int _addValue(const std::string& propname, std::string& value, 
-                  pexPolicy::Policy& policy, std::istream& is);
+                  Policy& policy, std::istream& is);
 
     static const boost::regex COMMENT_LINE;
     static const boost::regex EMPTY_LINE;

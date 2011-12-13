@@ -43,15 +43,15 @@ namespace policy {
  * an parent exception for errors that occur during the parsing of policy 
  * files.  
  */
-class ParserError : public pexExcept::RuntimeErrorException {
+class ParserError : public lsst::pex::exceptions::RuntimeErrorException {
 public:
 
     /**
      * Create an exception the exception with a default message.
      */
     ParserError(POL_EARGS_TYPED) 
-        : pexExcept::RuntimeErrorException(POL_EARGS_UNTYPED, 
-                                       "Unspecified parsing error encountered") 
+        : lsst::pex::exceptions::RuntimeErrorException(
+                POL_EARGS_UNTYPED, "Unspecified parsing error encountered") 
     { }
 
     /**
@@ -59,7 +59,7 @@ public:
      * @param msg     a message describing the problem.
      */
     ParserError(POL_EARGS_TYPED, const std::string& msg) 
-        : pexExcept::RuntimeErrorException(POL_EARGS_UNTYPED, msg) 
+        : lsst::pex::exceptions::RuntimeErrorException(POL_EARGS_UNTYPED, msg) 
     { }
 
     /**
@@ -70,8 +70,8 @@ public:
      *                  file is typically line 1.  
      */
     ParserError(POL_EARGS_TYPED, const std::string& msg, int lineno) 
-        : pexExcept::RuntimeErrorException(POL_EARGS_UNTYPED, 
-                                           makeLocatedMessage(msg,lineno)) 
+        : lsst::pex::exceptions::RuntimeErrorException(
+                POL_EARGS_UNTYPED, makeLocatedMessage(msg,lineno)) 
     { }
 
     static std::string makeLocatedMessage(const std::string& msg, int lineno) {
@@ -81,7 +81,7 @@ public:
     }
 
     virtual char const *getType() const throw();
-    virtual pexExcept::Exception *clone() const;
+    virtual lsst::pex::exceptions::Exception *clone() const;
 };
 
 /**
@@ -127,7 +127,7 @@ public:
         : ParserError(POL_EARGS_UNTYPED, msg, lineno) { }
 
     virtual char const *getType() const throw();
-    virtual pexExcept::Exception *clone() const;
+    virtual lsst::pex::exceptions::Exception *clone() const;
 };
 
 /**
@@ -160,7 +160,7 @@ public:
         : ParserError(POL_EARGS_UNTYPED, msg, lineno) { }
 
     virtual char const *getType() const throw();
-    virtual pexExcept::Exception *clone() const;
+    virtual lsst::pex::exceptions::Exception *clone() const;
 };
 
 /**
@@ -194,7 +194,7 @@ public:
         : SyntaxError(POL_EARGS_UNTYPED, msg, lineno) { }
 
     virtual char const *getType() const throw();
-    virtual pexExcept::Exception *clone() const;
+    virtual lsst::pex::exceptions::Exception *clone() const;
 };
 
 /**
@@ -228,7 +228,7 @@ public:
         : SyntaxError(POL_EARGS_UNTYPED, msg, lineno) { }
 
     virtual char const *getType() const throw();
-    virtual pexExcept::Exception *clone() const;
+    virtual lsst::pex::exceptions::Exception *clone() const;
 };
 
 

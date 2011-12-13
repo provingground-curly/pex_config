@@ -47,12 +47,10 @@ class PolicyParser;
 
 namespace paf {
 
-namespace pexPolicy = lsst::pex::policy;
-
 /**
  * a class for creating PAFParser objects
  */
-class PAFParserFactory : public pexPolicy::PolicyParserFactory {
+class PAFParserFactory : public PolicyParserFactory {
 public:
 
     /**
@@ -63,7 +61,7 @@ public:
      *                       file.  The default is "<?cfg JSON ... ?>"
      */
     PAFParserFactory(const boost::regex& contIdPatt=CONTENTID) 
-        : pexPolicy::PolicyParserFactory(), contentid(contIdPatt) { }
+        : PolicyParserFactory(), contentid(contIdPatt) { }
 
     /**
      * create a new PolicyParser class and return a pointer to it.  The 
@@ -76,8 +74,8 @@ public:
      *                    result in some data not getting loaded.  The 
      *                    default (set by PolicyParser) is true.
      */
-    virtual pexPolicy::PolicyParser* createParser(pexPolicy::Policy& policy, 
-                                                  bool strict=true) const;
+    virtual PolicyParser* createParser(Policy& policy, 
+                                       bool strict=true) const;
 
     /**
      * analyze the given string assuming contains the leading characters 

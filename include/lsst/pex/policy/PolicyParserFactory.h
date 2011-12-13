@@ -46,8 +46,6 @@ namespace policy {
 // forward declaration
 class PolicyParser;
 
-namespace dafBase = lsst::daf::base;
-
 // class PolicyParserFactory : public Citizen {  // causing deletion problems
 
 /**

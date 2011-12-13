@@ -49,16 +49,12 @@ class PolicyFile;
 class Dictionary;
 class ValidationError;
 
-namespace fs = boost::filesystem;
-namespace pexExcept = lsst::pex::exceptions;
-namespace dafBase = lsst::daf::base;
-
 #define POL_GETSCALAR(name, type, vtype) \
     try { \
         return _data->get<type>(name); \
-    } catch (pexExcept::NotFoundException&) {   \
+    } catch (lsst::pex::exceptions::NotFoundException&) {   \
         throw LSST_EXCEPT(NameNotFound, name);  \
-    } catch (dafBase::TypeMismatchException&) { \
+    } catch (lsst::daf::base::TypeMismatchException&) { \
         throw LSST_EXCEPT(TypeError, name, std::string(typeName[vtype])); \
     } catch (boost::bad_any_cast&) { \
         throw LSST_EXCEPT(TypeError, name, std::string(typeName[vtype])); \
@@ -67,9 +63,9 @@ namespace dafBase = lsst::daf::base;
 #define POL_GETLIST(name, type, vtype) \
     try { \
         return _data->getArray<type>(name); \
-    } catch (pexExcept::NotFoundException&) {   \
+    } catch (lsst::pex::exceptions::NotFoundException&) {   \
         throw LSST_EXCEPT(NameNotFound, name);  \
-    } catch (dafBase::TypeMismatchException&) { \
+    } catch (lsst::daf::base::TypeMismatchException&) { \
         throw LSST_EXCEPT(TypeError, name, std::string(typeName[vtype])); \
     } catch (boost::bad_any_cast&) { \
         throw LSST_EXCEPT(TypeError, name, std::string(typeName[vtype])); \
@@ -170,7 +166,7 @@ namespace dafBase = lsst::daf::base;
  * After 3.3.3, loading default data (including from Dictionarys) was 
  * improved.  This included adding mergeDefaults()
  */
-class Policy : public dafBase::Citizen, public dafBase::Persistable {
+class Policy : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
 public:
 
     typedef boost::shared_ptr<Policy> Ptr;
@@ -244,7 +240,7 @@ public:
      *                    in \c dict.  The default is the current directory.
      */
     Policy(bool validate, const Dictionary& dict,
-           const fs::path& repository="");
+           const boost::filesystem::path& repository="");
 
     /**
      * copy a Policy.  
@@ -313,14 +309,16 @@ public:
      *                    it will be given to the returned policy and 
      *                    used to validate future updates to the Policy.
      */
-    static Policy *createPolicy(PolicySource& input, const fs::path& repos, 
+    static Policy *createPolicy(PolicySource& input,
+                                const boost::filesystem::path& repos, 
                                 bool validate=true);
     static Policy *createPolicy(PolicySource& input, const std::string& repos, 
                                 bool validate=true);
     static Policy *createPolicy(PolicySource& input, const char *repos, 
                                 bool validate=true);
     static Policy *createPolicy(const std::string& input, 
-                                const fs::path& repos, bool validate=true);
+                                const boost::filesystem::path& repos,
+                                bool validate=true);
     static Policy *createPolicy(const std::string& input, 
                                 const std::string& repos, bool validate=true);
     static Policy *createPolicy(const std::string& input, const char *repos, 
@@ -775,7 +773,7 @@ public:
      * @return            the number of files loaded
      */
     int loadPolicyFiles(bool strict=true) {
-        return loadPolicyFiles(fs::path(), strict);
+        return loadPolicyFiles(boost::filesystem::path(), strict);
     }
 
     /**
@@ -785,7 +783,8 @@ public:
      *                    absolute path will this.  If empty or not provided,
      *                    the directorywill be assumed to be the current one.
      */
-    virtual int loadPolicyFiles(const fs::path& repository, bool strict=true);
+    virtual int loadPolicyFiles(const boost::filesystem::path& repository,
+                                bool strict=true);
 
     /**
      * use the values found in the given policy as default values for parameters
@@ -842,18 +841,18 @@ public:
      * return the internal policy data as a PropertySet pointer.  All
      * sub-policy data will appear as PropertySets.
      */
-    dafBase::PropertySet::Ptr asPropertySet();             // inlined below
+    lsst::daf::base::PropertySet::Ptr asPropertySet();             // inlined below
 
 protected:
     /**
      * use a PropertySet as the data for a new Policy object
      */
-    Policy(const dafBase::PropertySet::Ptr ps) 
-        : Citizen(typeid(this)), dafBase::Persistable(), _data(ps) 
+    Policy(const lsst::daf::base::PropertySet::Ptr ps) 
+        : Citizen(typeid(this)), lsst::daf::base::Persistable(), _data(ps) 
     { }
 
 private:
-    dafBase::PropertySet::Ptr _data;
+    lsst::daf::base::PropertySet::Ptr _data;
 
     DictPtr _dictionary;
 
@@ -869,21 +868,23 @@ private:
     template <typename T> 
     void _validate(const std::string& name, const T& value, int curCount=0);
 
-    std::vector<dafBase::Persistable::Ptr> 
+    std::vector<lsst::daf::base::Persistable::Ptr> 
         _getPersistList(const std::string& name) const 
     {
         POL_GETLIST(name, Persistable::Ptr, FILE)
     }
-    std::vector<dafBase::PropertySet::Ptr> 
+    std::vector<lsst::daf::base::PropertySet::Ptr> 
         _getPropSetList(const std::string& name) const 
     {
-        POL_GETLIST(name, dafBase::PropertySet::Ptr, POLICY)
+        POL_GETLIST(name, lsst::daf::base::PropertySet::Ptr, POLICY)
     }
 
     static Policy *_createPolicy(PolicySource& input, bool doIncludes,
-                                 const fs::path& repos, bool validate);
+                                 const boost::filesystem::path& repos,
+                                 bool validate);
     static Policy *_createPolicy(const std::string& input, bool doIncludes,
-                                 const fs::path& repos, bool validate);
+                                 const boost::filesystem::path& repos,
+                                 bool validate);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Policy& p) {
@@ -982,7 +983,7 @@ inline bool Policy::isString(const std::string& name) const {
 
 inline bool Policy::isPolicy(const std::string& name) const {
     try {
-        return (_data->typeOf(name) == typeid(dafBase::PropertySet::Ptr));
+        return (_data->typeOf(name) == typeid(lsst::daf::base::PropertySet::Ptr));
     }
     catch (...) {
         return false;
@@ -1002,7 +1003,7 @@ inline bool Policy::isFile(const std::string& name) const {
 inline const std::type_info& Policy::getTypeInfo(const std::string& name) const
 {
     try {  return _data->typeOf(name); }
-    catch (pexExcept::NotFoundException& e) {
+    catch (lsst::pex::exceptions::NotFoundException& e) {
         throw LSST_EXCEPT(NameNotFound, name);
     }
 }
@@ -1012,10 +1013,10 @@ inline const std::type_info& Policy::typeOf(const std::string& name) const {
 }
 
 inline Policy::ConstPtr Policy::getPolicy(const std::string& name) const {
-    return ConstPtr(new Policy(_data->get<dafBase::PropertySet::Ptr>(name)));
+    return ConstPtr(new Policy(_data->get<lsst::daf::base::PropertySet::Ptr>(name)));
 }
 inline Policy::Ptr Policy::getPolicy(const std::string& name) {
-    return Ptr(new Policy(_data->get<dafBase::PropertySet::Ptr>(name)));
+    return Ptr(new Policy(_data->get<lsst::daf::base::PropertySet::Ptr>(name)));
 }
 
 inline 
@@ -1067,7 +1068,7 @@ inline void Policy::set(const std::string& name, const char *value) {
 
 #define POL_ADD(name, value) \
     try {  _data->add(name, value);  } \
-    catch(dafBase::TypeMismatchException&) { \
+    catch(lsst::daf::base::TypeMismatchException&) { \
         throw LSST_EXCEPT(TypeError, name, getTypeName(name));  \
     }
 
@@ -1105,17 +1106,18 @@ inline void Policy::remove(const std::string& name) {
 inline Policy* Policy::createPolicy(PolicySource& input, bool doIncludes, 
                                     bool validate) 
 {
-    return _createPolicy(input, doIncludes, fs::path(), validate);
+    return _createPolicy(input, doIncludes, boost::filesystem::path(), validate);
 } 
 
 inline Policy* Policy::createPolicy(const std::string& input, bool doIncludes, 
                                     bool validate) 
 {
-    return _createPolicy(input, doIncludes, fs::path(), validate);
+    return _createPolicy(input, doIncludes, boost::filesystem::path(), validate);
 } 
 
 inline Policy* Policy::createPolicy(PolicySource& input, 
-                                    const fs::path& repository, bool validate) 
+                                    const boost::filesystem::path& repository,
+                                    bool validate) 
 {
     return _createPolicy(input, true, repository, validate);
 }
@@ -1124,18 +1126,19 @@ inline Policy* Policy::createPolicy(PolicySource& input,
                                     const std::string& repository, 
                                     bool validate) 
 {
-    return _createPolicy(input, true, fs::path(repository), validate);
+    return _createPolicy(input, true, boost::filesystem::path(repository), validate);
 }
 
 inline Policy* Policy::createPolicy(PolicySource& input, 
                                     const char *repository, 
                                     bool validate) 
 {
-    return _createPolicy(input, true, fs::path(repository), validate);
+    return _createPolicy(input, true, boost::filesystem::path(repository), validate);
 }
 
 inline Policy* Policy::createPolicy(const std::string& input, 
-                                    const fs::path& repository, bool validate) 
+                                    const boost::filesystem::path& repository,
+                                    bool validate) 
 {
     return _createPolicy(input, true, repository, validate);
 }
@@ -1144,17 +1147,17 @@ inline Policy* Policy::createPolicy(const std::string& input,
                                     const std::string& repository, 
                                     bool validate) 
 {
-    return _createPolicy(input, true, fs::path(repository), validate);
+    return _createPolicy(input, true, boost::filesystem::path(repository), validate);
 }
 
 inline Policy* Policy::createPolicy(const std::string& input, 
                                     const char *repository, 
                                     bool validate) 
 {
-    return _createPolicy(input, true, fs::path(repository), validate);
+    return _createPolicy(input, true, boost::filesystem::path(repository), validate);
 }
 
-inline dafBase::PropertySet::Ptr Policy::asPropertySet() { return _data; }
+inline lsst::daf::base::PropertySet::Ptr Policy::asPropertySet() { return _data; }
 
 // general case is disallowed; known types are specialized
 template <typename T> T Policy::getValue(const std::string& name) const {

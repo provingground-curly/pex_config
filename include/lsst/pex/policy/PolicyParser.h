@@ -40,13 +40,11 @@ namespace lsst {
 namespace pex {
 namespace policy {
 
-namespace dafBase = lsst::daf::base;
-
 /**
  * @brief an abstract class for parsing serialized Policy data and loading
  * it into a Policy object.  
  */
-class PolicyParser : public dafBase::Citizen {
+class PolicyParser : public lsst::daf::base::Citizen {
 public: 
 
     /**
@@ -58,7 +56,7 @@ public:
      *                   result in some data not getting loaded.
      */
     PolicyParser(Policy& policy, bool strict=true) 
-        : dafBase::Citizen(typeid(this)), _pol(policy), _strict(strict) { }
+        : lsst::daf::base::Citizen(typeid(this)), _pol(policy), _strict(strict) { }
 
     /**
      * destroy this factory

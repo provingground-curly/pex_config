@@ -43,8 +43,6 @@ namespace lsst {
 namespace pex {
 namespace policy {
 
-namespace dafBase = lsst::daf::base;
-
 // class SupportedFormats : public Citizen { // causes problems in construction
 
 /**

@@ -30,6 +30,7 @@
 #include <cctype>
 #include <functional>
 
+namespace fs = boost::filesystem;
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace lsst {
