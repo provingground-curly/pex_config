@@ -1,7 +1,8 @@
 from .config import *
 import collections
 
-__all__ = ("Registry", "makeRegistry", "RegistryField", "registerConfig", "registerConfigurable")
+__all__ = ("Registry", "RegistryInstanceDict", "makeRegistry", "RegistryField",
+           "registerConfig", "registerConfigurable")
 
 class ConfigurableWrapper(object):
     """A wrapper for configurables

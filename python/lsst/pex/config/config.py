@@ -96,13 +96,13 @@ class ConfigInstanceDict(collections.Mapping):
    
     """
     In a multi-selection ConfigInstanceDict, list of names of active items
-    Disabled In a single-selection _Regsitry)
+    Disabled In a single-selection
     """
     names = property(_getNames, _setNames, _delNames)
    
     """
     In a single-selection ConfigInstanceDict, name of the active item
-    Disabled In a multi-selection _Regsitry)
+    Disabled In a multi-selection
     """
     name = property(_getName, _setName, _delName)
 
@@ -117,8 +117,8 @@ class ConfigInstanceDict(collections.Mapping):
 
     """
     Readonly shortcut to access the selected item(s) of the registry.
-    for multi-selection _Registry, this is equivalent to: [self[name] for [name] in self.names]
-    for single-selection _Registry, this is equivalent to: self[name]
+    for multi-selection, this is equivalent to: [self[name] for [name] in self.names]
+    for single-selection, this is equivalent to: self[name]
     """
     active = property(_getActive)
 
