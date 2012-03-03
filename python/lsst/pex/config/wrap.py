@@ -111,6 +111,10 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
                 if dtype is None:
                     raise TypeError("Could not parse field type '%s'." % ctype)
                 fields[k] = FieldCls(doc=doc, dtype=dtype, optional=True)
+                file = getattr(ctrl, "_file_" + k)()
+                line = getattr(ctrl, "_line_" + k)()
+                fields[k].source = (file, line, "C++ class", "C++ definition")
+
     def makeControl(self):
         """Construct a C++ Control object from this Config object.
 

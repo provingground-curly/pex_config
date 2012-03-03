@@ -24,6 +24,14 @@
 #define LSST_PEX_CONFIG_H
 
 #define LSST_CONTROL_FIELD(NAME, TYPE, DOC)             \
+    static char const * _file_ ## NAME() {              \
+        static char const * file = __FILE__;            \
+        return file;                                    \
+    }                                                   \
+    static int _line_ ## NAME() {              \
+        static int line = __LINE__;            \
+        return line;                                    \
+    }                                                   \
     static char const * _doc_ ## NAME() {               \
         static char const * doc = DOC;                  \
         return doc;                                     \

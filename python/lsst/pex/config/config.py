@@ -411,7 +411,7 @@ class Field(object):
         else:
             return instance._storage[self.name]
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value, tb=None):
         history = instance._history.setdefault(self.name, [])
         if value is not None:
             try:
@@ -420,11 +420,14 @@ class Field(object):
                 raise FieldValidationError(self, instance, e.message)
         
         instance._storage[self.name] = value
-        traceStack = traceback.extract_stack()[:-1]
+        if tb is None:
+            traceStack = traceback.extract_stack()[:-1]
+        else:
+            traceStack = tb
         history.append((value, traceStack))
 
     def __delete__(self, instance):
-        self.__set__(instance, None)
+        self.__set__(instance, None, traceback.extract_stack()[:-1])
    
 
 class Config(object):
@@ -465,7 +468,7 @@ class Config(object):
         instance._history = {}
         # load up defaults
         for field in instance._fields.itervalues():
-            field.__set__(instance, field.default)
+            field.__set__(instance, field.default, [field.source])
         return instance
 
     def __init__(self, **kw):
@@ -568,7 +571,8 @@ class Config(object):
     def __setattr__(self, attr, value):
         if attr in self._fields:
             # This allows Field descriptors to work.
-            self._fields[attr].__set__(self, value)
+            self._fields[attr].__set__(self, value,
+                    traceback.extract_stack()[:-1])
         elif hasattr(getattr(self.__class__, attr, None), '__set__'):
             # This allows properties and other non-Field descriptors to work.
             return object.__setattr__(self, attr, value)
@@ -734,10 +738,10 @@ class ListField(Field):
         for i, x in enumerate(value):
             self.validateItem(i,x)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value, tb=None):
         if value is not None:
             value = List(instance, self, value)
-        Field.__set__(self, instance, value)
+        Field.__set__(self, instance, value, tb)
 
     
     def toDict(self, instance):        
@@ -788,10 +792,10 @@ class DictField(Field):
         for k, x in value.iteritems():
             self.validateItem(k, x)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value, tb=None):
         if value is not None:
             value = Dict(instance, self, value)
-        Field.__set__(self, instance, value)
+        Field.__set__(self, instance, value, tb)
     
     def toDict(self, instance):        
         value = self.__get__(instance)        
@@ -830,10 +834,10 @@ class ConfigField(Field):
         else:
             value = instance._storage.get(self.name, None)
             if value is None:
-                self.__set__(instance, self.default)
+                self.__set__(instance, self.default, [self.source])
             return value
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value, tb=None):
         name = _joinNamePath(prefix=instance._name, name=self.name)
         if value != self.dtype and type(value) != self.dtype:
             raise TypeError("Cannot set ConfigField %s: type(%r) is not %r" % (name, value,dtype))
@@ -931,7 +935,7 @@ class ConfigChoiceField(Field):
         else:
             return self._getOrMake(instance)
 
-    def __set__(self, instance, value):        
+    def __set__(self, instance, value, tb=None):
         instanceDict = self._getOrMake(instance)
         if isinstance(value, self.instanceDictClass):
             for k in value:                    
