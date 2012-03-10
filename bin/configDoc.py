@@ -5,8 +5,7 @@ import importlib
 import os
 import re
 import lsst.pex.config as pexConfig
-
-
+import lsst.pex.config.history as pexConfigHistory
 
 class ConfigDoc(object):
     def __init__(self, writeCurrentValue=True, writeSourceLine=True,
@@ -15,62 +14,80 @@ class ConfigDoc(object):
         self.writeSourceLine = writeSourceLine
         self.writeDoc = writeDoc
         self.writeHistory = writeHistory
-        self.colors = dict(no="", di="", ex="", pi="")
-        if "LS_COLORS" not in os.environ:
-            return
-        for pair in os.environ["LS_COLORS"].split(':'):
-            name, eq, color = pair.partition('=')
-            self.colors[name] = '\033[' + color + 'm'
 
-    def doc(self, configName):
+    def docName(self, configName, overrides, configFiles):
         lastDot = configName.rfind('.')
         configModule = configName[0:lastDot]
         configClass = configName[lastDot+1:]
         ConfigClass = getattr(importlib.import_module(configModule),
                                     configClass)
-        self._doc(ConfigClass())
+        config = ConfigClass()
+        if configFiles is not None:
+            for f in configFiles:
+                config.load(f)
 
-    def _colorize(self, value, color):
-        return "%s%s%s" % (self.colors[color], value, self.colors['no'])
+        if overrides is not None:
+            for override in overrides:
+                name, sep, valueStr = override.partition("=")
+                # see if setting the string value works; if not, try eval
+                try:
+                    setDottedAttr(config, name, valueStr)
+                except Exception:
+                    try:
+                        value = eval(valueStr, {})
+                    except Exception:
+                        raise RuntimeError(
+                                "Cannot parse %r as a value for %s" % (
+                                    valueStr, name))
+                    try:
+                        setDottedAttr(config, name, value)
+                    except Exception, e:
+                        raise RuntimeError("Cannot set config.%s=%r: %s" % (
+                            name, value, str(e))) 
 
-    def _sourceLine(self, tbEntry):
-        fileName = re.sub(r'.*/python/lsst/', "", tbEntry[0])
-        return self._colorize("(%s:%d)" % (fileName, tbEntry[1]), 'ex')
+        self.doc(config)
 
-    def _doc(self, config, prefix=""):
+
+    def doc(self, config, prefix=""):
         m = re.search(r"'(.*)'>", str(type(config)))
         if prefix != "":
             line = "%s (%s):" % (prefix[0:-1], m.group(1))
         else:
             line = "Doc for %s:" % (m.group(1),)
         if self.writeSourceLine:
-            line += " " + self._sourceLine(config._source)
+            line += " " + _sourceLine(config._source)
         print line
         # Need str() here because __doc__ is sometimes None
         if self.writeDoc:
-            print self._colorize('"""%s"""' % (str(config.__doc__),), 'di')
+            print _colorize('"""%s"""' % (str(config.__doc__),), 'TEXT')
         for k, v in config.iteritems():
             if isinstance(v, pexConfig.Config):
-                self._doc(v, prefix + k + ".")
-            elif isinstance(v, pexConfig.registry.RegistryInstanceDict) \
-                    or isinstance(v, pexConfig.config.ConfigInstanceDict):
+                self.doc(v, prefix + k + ".")
+            elif isinstance(v, pexConfig.config.ConfigInstanceDict):
                 attr = "name"
                 if config._fields[k].multi:
                     attr = "names"
                 line = prefix + k + "." + attr
                 if self.writeCurrentValue:
-                    line += " = " + self._colorize(str(getattr(v, attr)), 'pi')
+                    line += " = " + _colorize(str(getattr(v, attr)), 'VALUE')
                 print line
-                if isinstance(v, pexConfig.config.ConfigInstanceDict):
-                    if hasattr(v.type, "__iter__"):
-                        iterable = v.type
-                    else:
-                        # No way to iterate through the typemap so have to
-                        # iterate through the dictionary of values that have
-                        # been set
-                        iterable = v
-                else:
+                if self.writeHistory:
+                    for val, tb, label in config.history[k]:
+                        line = "\t" + _colorize(str(val), 'VALUE')
+                        line += " " + label
+                        if self.writeSourceLine:
+                            line += " " + _sourceLine(tb[-1])
+                        print line
+                if isinstance(v, pexConfig.registry.RegistryInstanceDict):
                     iterable = config._fields[k].typemap.registry
+                elif hasattr(v.types, "__iter__"):
+                    iterable = v.types
+                else:
+                    # No way to iterate through the typemap so have to
+                    # iterate through the dictionary of values that have
+                    # been set
+                    print "[unable to show unset configs]"
+                    iterable = v
                 for n, c in iterable.iteritems():
                     documentable = None
                     if n in v:
@@ -84,24 +101,41 @@ class ConfigDoc(object):
                         documentable = c.ConfigClass()
     
                     if documentable is not None:
-                        self._doc(documentable, "%s%s['%s']." % (prefix, k, n))
+                        self.doc(documentable, "%s%s['%s']." % (prefix, k, n))
             else:
                 line = prefix + k
                 if self.writeCurrentValue:
-                    line += " = " + self._colorize(str(v), 'pi')
+                    line += " = " + _colorize(str(v), 'VALUE')
                 if self.writeSourceLine and not self.writeHistory:
-                    line += " " + self._sourceLine(config.history[k][-1][1][-1])
+                    line += " " + _sourceLine(config.history[k][-1][1][-1])
                 print line
                 if self.writeDoc:
-                    for l in config._fields[k].__doc__.split('\n'):
-                        print "\t" + self._colorize(l, 'di')
+                    for l in config._fields[k].doc.split('\n'):
+                        print "\t" + _colorize(l, 'TEXT')
                 if self.writeHistory:
-                    for v, tb in config.history[k]:
-                        line = "\t" + self._colorize(str(v), 'pi')
+                    for v, tb, label in config.history[k]:
+                        line = "\t" + _colorize(str(v), 'VALUE')
+                        line += " " + label
                         if self.writeSourceLine:
-                            line += " " + self._sourceLine(tb[-1])
+                            line += " " + _sourceLine(tb[-1])
                         print line
     
+def _colorize(value, color):
+    return pexConfigHistory._colorize(value, color)
+
+def _sourceLine(tbEntry):
+    fileName = re.sub(r'.*/python/lsst/', "", tbEntry[0])
+    return _colorize("(%s:%d)" % (fileName, tbEntry[1]), 'FILE')
+
+def setDottedAttr(item, name, value):
+    """Like setattr, but accepts hierarchical names, e.g. foo.bar.baz"""
+    subitem = item
+    subnameList = name.split(".")
+    for subname in subnameList[:-1]:
+        subitem = getattr(subitem, subname)
+    subitem._fields[subnameList[-1]].__set__(subitem, value,
+            label="command line")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
             description='Describe an lsst.pex.config.Config.')
@@ -115,6 +149,11 @@ if __name__ == "__main__":
             help="write value history")
     parser.add_argument('-v', '--value', action='store_true',
             help="write current value")
+    parser.add_argument('-c', '--config', nargs="*", dest="overrides",
+            help="config override(s)")
+    parser.add_argument('-C', '--configfile', nargs="*", dest="configFiles",
+            help="config override file(s)")
+
     parser.add_argument('config', type=str, nargs=1,
             help="fully-qualified name of Config class (package must be setup)")
     args = parser.parse_args()
@@ -126,4 +165,4 @@ if __name__ == "__main__":
         args.value = True
     cd = ConfigDoc(writeCurrentValue=args.value, writeSourceLine=args.line,
             writeDoc=args.doc, writeHistory=args.history)
-    cd.doc(args.config[0])
+    cd.docName(args.config[0], args.overrides, args.configFiles)

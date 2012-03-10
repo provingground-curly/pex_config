@@ -32,9 +32,10 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
     @param cls         An existing config class to use instead of creating a new one; name, base
                        doc, and module will be ignored if this is not None.
 
-    See the 'wrap' decorator as a way to use makeConfigClass that may be more convenient.
+    See the 'wrap' decorator as a way to use makeConfigClass that may be more
+    convenient."""
 
-    To use makeConfigClass, in C++, write a control object, using the LSST_CONTROL_FIELD macro in
+    """To use makeConfigClass, in C++, write a control object, using the LSST_CONTROL_FIELD macro in
     lsst/pex/config.h (note that it must have sensible default constructor):
 
     struct FooControl {
@@ -74,7 +75,13 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
             raise ValueError("Cannot guess appropriate Config class name for %s." % ctrl)
         name = ctrl.__name__.replace("Control", "Config")
     if cls is None:
-        cls = type(name, (base,), {"__doc__":doc})
+        filename = ctrl.__name__ + " C++"
+        line = 0
+        if hasattr(ctrl, "_file"):
+            filename = getattr(ctrl, "_file")()
+            line = getattr(ctrl, "_line")()
+        cls = type(name, (base,),
+                dict(__doc__=doc, __source=(filename, line, "source", "")))
         if module is not None:
             if isinstance(module, int):
                 frame = inspect.stack()[module]
@@ -111,9 +118,12 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
                 if dtype is None:
                     raise TypeError("Could not parse field type '%s'." % ctype)
                 fields[k] = FieldCls(doc=doc, dtype=dtype, optional=True)
-                file = getattr(ctrl, "_file_" + k)()
-                line = getattr(ctrl, "_line_" + k)()
-                fields[k].source = (file, line, "C++ class", "C++ definition")
+                filename = ctrl.__name__ + " C++"
+                line = 0
+                if hasattr(ctrl, "_file_" + k):
+                    filename = getattr(ctrl, "_file_" + k)()
+                    line = getattr(ctrl, "_line_" + k)()
+                fields[k].source = (filename, line, "source", "")
 
     def makeControl(self):
         """Construct a C++ Control object from this Config object.
@@ -142,20 +152,21 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
         """Initialize the config object, using the Control objects default ctor
         to provide defaults."""
         defaults = {}
+        r = None
         try:
             r = self.Control()
-            for k in fields:
-                value = getattr(r, k)
-                defaults[k] = getattr(r, k)
-            # Wipe out bogus history from initializing the class.
-            self._history = {}
-            # Make up something for C++ until we can get C++ source info.
-            self.update(
-                    __at=[(ctrl.__name__ + " C++", 0, "setDefaults", "")],
-                    __label="default",
-                    **defaults)
         except:
             pass # if we can't instantiate the Control, don't set defaults
+
+        # Wipe out bogus history from initializing the class and re-create
+        # using defaults from Control if present.
+        self._history = {}
+        for k in fields:
+            value = None
+            if r is not None:
+                value = getattr(r, k)
+            fields[k].__set__(self, value,
+                    at=[fields[k].source], label="default")
 
     ctrl.ConfigClass = cls
     cls.Control = ctrl

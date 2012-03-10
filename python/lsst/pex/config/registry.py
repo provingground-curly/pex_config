@@ -1,6 +1,7 @@
 from .config import *
 import collections
 import copy
+import traceback
 
 __all__ = ("Registry", "makeRegistry", "RegistryField", "registerConfig", "registerConfigurable")
 
@@ -96,7 +97,9 @@ class Registry(collections.Mapping):
         return key in self._dict
 
     def makeField(self, doc, default=None, optional=False, multi=False):
-        return RegistryField(doc, self, default, optional, multi)
+        r = RegistryField(doc, self, default, optional, multi)
+        r.source = traceback.extract_stack(limit=2)[0]
+        return r
 
 class RegistryAdaptor(object):
     """Private class that makes a Registry behave like the thing a ConfigChoiceField expects."""
@@ -150,14 +153,17 @@ class RegistryField(ConfigChoiceField):
         types = RegistryAdaptor(registry)
         self.registry = registry
         ConfigChoiceField.__init__(self, doc, types, default, optional, multi)
+        self.source = traceback.extract_stack(limit=2)[0]
 
     def __deepcopy__(self, memo):
         """Customize deep-copying, because we always want a reference to the original registry.
 
         WARNING: this must be overridden by subclasses if they change the constructor signature!
         """
-        return type(self)(doc=self.doc, registry=self.registry, default=copy.deepcopy(self.default),
+        r = type(self)(doc=self.doc, registry=self.registry, default=copy.deepcopy(self.default),
                           optional=self.optional, multi=self.multi)
+        r.source = self.source
+        return r
 
 def makeRegistry(doc, configBaseType=Config):
     """A convenience function to create a new registry.
