@@ -61,11 +61,12 @@ class ConfigDoc(object):
         if self.writeDoc:
             print _colorize('"""%s"""' % (str(config.__doc__),), 'TEXT')
         for k, v in config.iteritems():
+            field = config._fields[k]
             if isinstance(v, pexConfig.Config):
                 self.doc(v, prefix + k + ".")
             elif isinstance(v, pexConfig.config.ConfigInstanceDict):
                 attr = "name"
-                if config._fields[k].multi:
+                if field.multi:
                     attr = "names"
                 line = prefix + k + "." + attr
                 if self.writeCurrentValue:
@@ -79,7 +80,7 @@ class ConfigDoc(object):
                             line += " " + _sourceLine(tb[-1])
                         print line
                 if isinstance(v, pexConfig.registry.RegistryInstanceDict):
-                    iterable = config._fields[k].typemap.registry
+                    iterable = field.typemap.registry
                 elif hasattr(v.types, "__iter__"):
                     iterable = v.types
                 else:
@@ -110,8 +111,16 @@ class ConfigDoc(object):
                     line += " " + _sourceLine(config.history[k][-1][1][-1])
                 print line
                 if self.writeDoc:
-                    for l in config._fields[k].doc.split('\n'):
+                    for l in field.doc.split('\n'):
                         print "\t" + _colorize(l, 'TEXT')
+                    if hasattr(field, "dtype"):
+                        if type(field.dtype) == type(pexConfig.config.Dict):
+                            print "\tDict: %s => %s" % (str(field.keytype),
+                                str(field.itemtype))
+                        elif type(field.dtype) == type(pexConfig.config.List):
+                            print "\tList: %s" % (str(field.itemtype),)
+                        else:
+                            print "\t%s" % (str(field.dtype),)
                 if self.writeHistory:
                     for v, tb, label in config.history[k]:
                         line = "\t" + _colorize(str(v), 'VALUE')
