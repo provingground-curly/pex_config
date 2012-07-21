@@ -64,7 +64,7 @@ class ConfigDoc(object):
             field = config._fields[k]
             if isinstance(v, pexConfig.Config):
                 self.doc(v, prefix + k + ".")
-            elif isinstance(v, pexConfig.config.ConfigInstanceDict):
+            elif isinstance(v, pexConfig.configChoiceField.ConfigInstanceDict):
                 attr = "name"
                 if field.multi:
                     attr = "names"
@@ -103,6 +103,19 @@ class ConfigDoc(object):
     
                     if documentable is not None:
                         self.doc(documentable, "%s%s['%s']." % (prefix, k, n))
+            elif isinstance(v, pexConfig.configurableField.ConfigurableInstance):
+                line = prefix + k + ".target"
+                if self.writeCurrentValue:
+                    line += " = " + _colorize(str(v.target), 'VALUE')
+                print line
+                if self.writeHistory:
+                    for val, tb, label in config.history[k]:
+                        line = "\t" + _colorize(str(val), 'VALUE')
+                        line += " " + label
+                        if self.writeSourceLine:
+                            line += " " + _sourceLine(tb[-2])
+                        print line
+                self.doc(v.value, prefix + k + ".")
             else:
                 line = prefix + k
                 if self.writeCurrentValue:
@@ -114,10 +127,10 @@ class ConfigDoc(object):
                     for l in field.doc.split('\n'):
                         print "\t" + _colorize(l, 'TEXT')
                     if hasattr(field, "dtype"):
-                        if type(field.dtype) == type(pexConfig.config.Dict):
+                        if field.dtype == pexConfig.dictField.Dict:
                             print "\tDict: %s => %s" % (str(field.keytype),
                                 str(field.itemtype))
-                        elif type(field.dtype) == type(pexConfig.config.List):
+                        elif field.dtype == pexConfig.listField.List:
                             print "\tList: %s" % (str(field.itemtype),)
                         else:
                             print "\t%s" % (str(field.dtype),)
