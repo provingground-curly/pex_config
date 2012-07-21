@@ -20,6 +20,13 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from .config import *
+from .rangeField import *
+from .choiceField import *
+from .listField import *
+from .dictField import *
+from .configField import *
+from .configChoiceField import * 
+from .configurableField import * 
 from .convert import *
 from .wrap import *
 from .registry import *

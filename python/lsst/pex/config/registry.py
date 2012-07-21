@@ -1,4 +1,5 @@
-from .config import *
+from .config import Config, Field, FieldValidationError, _typeStr
+from .configChoiceField import ConfigInstanceDict, ConfigChoiceField
 import collections
 import copy
 import traceback
@@ -8,7 +9,7 @@ __all__ = ("Registry", "makeRegistry", "RegistryField", "registerConfig", "regis
 class ConfigurableWrapper(object):
     """A wrapper for configurables
     
-    Used for configurables that don't contain a ConfigClass attribute,
+    U sed for configurables that don't contain a ConfigClass attribute,
     or contain one that is being overridden.
     """
     def __init__(self, target, ConfigClass):
@@ -57,7 +58,7 @@ class Registry(collections.Mapping):
         @param configBaseType: base class for config classes in registry
         """
         if not issubclass(configBaseType, Config):
-            raise TypeError("configBaseType=%r must be a subclass of Config" % (configBaseType,))
+            raise TypeError("configBaseType=%s must be a subclass of Config" % _typeStr(configBaseType,))
         self._configBaseType = configBaseType
         self._dict = {}
 
@@ -75,26 +76,20 @@ class Registry(collections.Mapping):
         @raise AttributeError if ConfigClass is None and target does not have attribute ConfigClass
         """
         if name in self._dict:
-            raise RuntimeError("An item with name %r already exists" % (name,))
+            raise RuntimeError("An item with name %r already exists" % name)
         if ConfigClass is None:
             wrapper = target
         else:
             wrapper = ConfigurableWrapper(target, ConfigClass)
         if not issubclass(wrapper.ConfigClass, self._configBaseType):
-            raise TypeError("ConfigClass=%r is not a subclass of %r" % (self._configBaseType,))
+            raise TypeError("ConfigClass=%s is not a subclass of %r" % \
+                    (_typeStr(wrapper.ConfigClass), _typeStr(self._configBaseType)))
         self._dict[name] = wrapper
     
-    def __getitem__(self, key):
-        return self._dict[key]
-    
-    def __len__(self):
-        return len(self._dict)
-    
-    def __iter__(self):
-        return iter(self._dict)
-
-    def __contains__(self, key):
-        return key in self._dict
+    def __getitem__(self, key): return self._dict[key]
+    def __len__(self): return len(self._dict)    
+    def __iter__(self): return iter(self._dict)
+    def __contains__(self, key): return key in self._dict
 
     def makeField(self, doc, default=None, optional=False, multi=False):
         r = RegistryField(doc, self, default, optional, multi)
@@ -107,8 +102,10 @@ class RegistryAdaptor(object):
     def __init__(self, registry):
         self.registry = registry
 
-    def __getitem__(self, k):
-        return self.registry[k].ConfigClass
+    def __getitem__(self, k): return self.registry[k].ConfigClass
+    def __iter__(self): return iter(self.registry)
+    def __len__(self): return len(self.registry)
+    def __contains__(self, k): return k in self.registry
 
 class RegistryInstanceDict(ConfigInstanceDict):    
     def __init__(self, config, field):
@@ -129,22 +126,25 @@ class RegistryInstanceDict(ConfigInstanceDict):
         return [self._field.typemap.registry[c] for c in self._selection]
     targets = property(_getTargets)
 
-    def apply(self, *args, **kwds):
-        """Call the active target with the active config as the first argument.
+    def apply(self, *args, **kw):
+        """Call the active target(s) with the active config as a keyword arg
 
-        If this is a multi-selection field, return a list obtained by calling each active
-        target with its corresponding active config as its first argument.
+        If this is a multi-selection field, return a list obtained by calling 
+        each active target with its corresponding active config.
 
-        Additional arguments will be passed on to the configurable or configurables.
+        Additional arguments will be passed on to the configurable target(s)
         """
         if self.active is None:
-            msg = "No selection has been mad.  Options: %s" % \
+            msg = "No selection has been made.  Options: %s" % \
                     (" ".join(self._field.typemap.registry.keys()))
             raise FieldValidationError(self._field, self._config, msg)
         if self._field.multi:
-            return [self._field.typemap.registry[c](self[c], *args, **kwds) for c in self._selection]
+            retvals = []
+            for c in self._selection:
+                retvals.append(self._field.typemap.registry[c](*args, config=self[c], **kw))
+            return retvals
         else:
-            return self._field.typemap.registry[self.name](self[self.name], *args, **kwds)
+            return self._field.typemap.registry[self.name](*args, config=self[self.name], **kw)
 
 class RegistryField(ConfigChoiceField):
     instanceDictClass = RegistryInstanceDict
@@ -156,12 +156,13 @@ class RegistryField(ConfigChoiceField):
         self.source = traceback.extract_stack(limit=2)[0]
 
     def __deepcopy__(self, memo):
-        """Customize deep-copying, because we always want a reference to the original registry.
-
-        WARNING: this must be overridden by subclasses if they change the constructor signature!
+        """Customize deep-copying, want a reference to the original registry.
+        WARNING: this must be overridden by subclasses if they change the 
+            constructor signature!
         """
-        r = type(self)(doc=self.doc, registry=self.registry, default=copy.deepcopy(self.default),
-                          optional=self.optional, multi=self.multi)
+        r = type(self)(doc=self.doc, registry=self.registry,
+                default=copy.deepcopy(self.default),
+                optional=self.optional, multi=self.multi)
         r.source = self.source
         return r
 

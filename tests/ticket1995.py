@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 
 # 
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2012 LSST Corporation.
 # 
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -21,31 +21,47 @@
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import os
+import math
+import tempfile
 import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.config as pexConf
-import eups
 
-class Config1(pexConf.Config):
-    f = pexConf.Field("Config1.f", float, default=4)
+class TestConfig(pexConf.Config):
+    list1 = pexConf.ListField(dtype=int, default=[1, 2], doc="list1")
+    f1 = pexConf.Field(dtype=float, doc="f1")
+    f2 = pexConf.Field(dtype=float, doc="f2")
 
-class Config2(pexConf.Config):
-    r = pexConf.ConfigChoiceField("Config2.r", {"c1":Config1}, default="c1")
-
-class Config3(pexConf.Config):
-    c = pexConf.ConfigField("Config3.c", Config2)
-
-class FieldNameReportingTest(unittest.TestCase):
+class EqualityTest(unittest.TestCase):
     def test(self):
-        c3 = Config3()
-        pex_product_dir = eups.productDir("pex_config")
-        c3.load(pex_product_dir+ "/tests/config/ticket1914.py")
+        c1 = TestConfig()
+        c2 = TestConfig()
+        self.assertEqual(c1, c2)
+        c1.list1 = [1,2,3,4,5]
+        self.assertNotEqual(c1, c2)
+        c2.list1 = c1.list1
+        self.assertEqual(c1, c2)
 
-def  suite():
+class LoadSpecialTest(unittest.TestCase):
+    def test(self):
+        c1 = TestConfig()
+        c2 = TestConfig()
+        c1.list1 = None
+        c1.f1 = float('nan')
+        c2.f2 = float('inf')
+        with tempfile.NamedTemporaryFile() as f:
+            c1.saveToStream(f.file)
+            f.file.close()
+            c2.load(f.name)
+        self.assertEqual(c1.list1, c2.list1)
+        self.assertEqual(c1.f2, c2.f2)
+        self.assertTrue(math.isnan(c2.f1))
+        
+def suite():
     utilsTests.init()
     suites = []
-    suites += unittest.makeSuite(FieldNameReportingTest)
+    suites += unittest.makeSuite(EqualityTest)
+    suites += unittest.makeSuite(LoadSpecialTest)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

@@ -109,6 +109,17 @@ class ConfigTest(unittest.TestCase):
         self.assert_(middle.field.registry is self.registry)
         self.assert_(top.middle.field.registry is self.registry)
 
+    def testRegistryField(self):
+        class C1(pexConfig.Config):
+            r = self.registry.makeField("registry field")
+
+        for t in C1.r.typemap:
+            self.assertEqual(C1.r.typemap[t], self.registry[t].ConfigClass)
+
+        c=  C1()
+        c.r = "foo2"
+        c.r.apply()
+
 def  suite():
     utilsTests.init()
     suites = []

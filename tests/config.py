@@ -131,13 +131,27 @@ class ConfigTest(unittest.TestCase):
         self.comp.p="AAA"
         self.comp.c.f=5.
         self.comp.save("roundtrip.test")
+        
         roundTrip = Complex()
-
         roundTrip.load("roundtrip.test")
-        #os.remove("roundtrip.test")
+        os.remove("roundtrip.test")
 
         self.assertEqual(self.comp.c.f, roundTrip.c.f)
         self.assertEqual(self.comp.r.name, roundTrip.r.name)
+
+        del roundTrip
+        #test saving to an open file
+        outfile = open("roundtrip.test", "w")
+        self.comp.saveToStream(outfile)
+        outfile.close()
+
+        roundTrip = Complex()
+        roundTrip.load("roundtrip.test")
+        os.remove("roundtrip.test")
+
+        self.assertEqual(self.comp.c.f, roundTrip.c.f)
+        self.assertEqual(self.comp.r.name, roundTrip.r.name)
+
 
     def testDuplicateRegistryNames(self):
         self.comp.r["AAA"].f = 5.0
@@ -215,6 +229,14 @@ class ConfigTest(unittest.TestCase):
 
         ps = pexConfig.makePropertySet(self.comp)
         self.assertEqual(ps.get("c.f"), self.comp.c.f)
+    def testFreeze(self):
+        self.comp.freeze()
+
+        self.assertRaises(pexConfig.FieldValidationError, setattr, self.comp.c, "f", 10.0)
+        self.assertRaises(pexConfig.FieldValidationError, setattr, self.comp, "r", "AAA")
+        self.assertRaises(pexConfig.FieldValidationError, setattr, self.comp, "p", "AAA")
+        self.assertRaises(pexConfig.FieldValidationError, setattr, self.comp.p["AAA"], "f", 5.0) 
+
 
 def  suite():
     utilsTests.init()
