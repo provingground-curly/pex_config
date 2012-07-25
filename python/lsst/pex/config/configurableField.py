@@ -236,5 +236,7 @@ class ConfigurableField(Field):
 
         WARNING: this must be overridden by subclasses if they change the constructor signature!
         """
-        return type(self)(doc=self.doc, target=self.target, ConfigClass=self.ConfigClass, 
+        r = type(self)(doc=self.doc, target=self.target, ConfigClass=self.ConfigClass, 
                 default=copy.deepcopy(self.default))
+        r.source = self.source
+        return r

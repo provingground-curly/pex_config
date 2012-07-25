@@ -200,10 +200,11 @@ class ConfigChoiceField(Field):
         self.typemap = typemap
         self.multi = multi
     
-    def _getOrMake(self, instance, label="default"):
+    def _getOrMake(self, instance, label="default", at=None):
         instanceDict = instance._storage.get(self.name)
         if instanceDict is None:
-            at = traceback.extract_stack()[:-2]
+            if at is None:
+                at = traceback.extract_stack()[:-2]
             name = _joinNamePath(instance._name, self.name)
             instanceDict = self.dtype(instance, self)
             instanceDict.__doc__ = self.doc
@@ -224,7 +225,7 @@ class ConfigChoiceField(Field):
             raise FieldValidationError(self, instance, "Cannot modify a frozen Config")
         if at is None: 
             at = traceback.extract_stack()[:-1]
-        instanceDict = self._getOrMake(instance)
+        instanceDict = self._getOrMake(instance, at=at)
         if isinstance(value, self.instanceDictClass):
             for k,v  in value.iteritems():                    
                 instanceDict.__setitem__(k, v, at=at, label=label)
@@ -286,5 +287,7 @@ class ConfigChoiceField(Field):
 
         WARNING: this must be overridden by subclasses if they change the constructor signature!
         """
-        return type(self)(doc=self.doc, typemap=self.typemap, default=copy.deepcopy(self.default),
+        r = type(self)(doc=self.doc, typemap=self.typemap, default=copy.deepcopy(self.default),
                           optional=self.optional, multi=self.multi)
+        r.source = self.source
+        return r
