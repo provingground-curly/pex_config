@@ -21,6 +21,16 @@ class ListOfListFieldTest(unittest.TestCase):
         else:
             raise SyntaxError("Unsupported dtype should not be allowed")
 
+        try:
+            class Frob(object):
+                pass
+            class BadDtype(pexConfig.Config):
+                l = pexConfig.ListOfListField("bad", Frob)
+        except:
+            pass
+        else:
+            raise SyntaxError("Unsupported dtype should not be allowed")
+
     def testAssignment(self):
         c = Config1()
         self.assertRaises(pexConfig.FieldValidationError, setattr, c, "x", [[1.2],[3.4]])
