@@ -27,10 +27,6 @@ __all__ = ["ListField", 'ListOfListField']
 
 class List(collections.MutableSequence):
     def __init__(self, config, field, value, at, label, setHistory=True):
-        #print 'List constructor:'
-        #print '  config:', config
-        #print '  field:', field
-        #print '  value:', value
         self._field = field
         self._config = config
         self._history = self._config._history.setdefault(self._field.name, [])
@@ -47,12 +43,11 @@ class List(collections.MutableSequence):
             self._addHistory(at, label)
 
     def validateItem(self, i, x):
-
         if not isinstance(x, self._field.itemtype) and x is not None:
             msg="Item at position %d with value %s is of incorrect type %s. Expected %s"%\
                     (i, x, _typeStr(x), _typeStr(self._field.itemtype))
             raise FieldValidationError(self._field, self._config, msg)
-                
+
         if self._field.itemCheck is not None and not self._field.itemCheck(x):
             msg="Item at position %d is not a valid value: %s"%(i, x)
             raise FieldValidationError(self._field, self._config, msg)
@@ -65,11 +60,11 @@ class List(collections.MutableSequence):
 
     def _addHistory(self, at, label):
         self.history.append((self._getHistoryEntry(), at, label))
-    
+
     """
     Read-only history
     """
-    history = property(lambda x: x._history)   
+    history = property(lambda x: x._history)
 
     def __contains__(self, x): return x in self._list
 
@@ -93,16 +88,15 @@ class List(collections.MutableSequence):
             x = _autocast(x, self._field.itemtype)
             x = self._transform(x, i, at, label, setHistory)
             self.validateItem(i, x)
-            
+
         self._list[i]=x
         if setHistory:
             if at is None:
                 at = traceback.extract_stack()[:-1]
             self._addHistory(at, label)
 
-        
     def __getitem__(self, i): return self._list[i]
-    
+
     def __delitem__(self, i, at =None, label="delitem", setHistory=True):
         if self._config._frozen:
             raise FieldValidationError(self._field, self._config, \
@@ -115,7 +109,7 @@ class List(collections.MutableSequence):
 
     def __iter__(self): return iter(self._list)
 
-    def insert(self, i, x, at=None, label="insert", setHistory=True): 
+    def insert(self, i, x, at=None, label="insert", setHistory=True):
         if at is None:
             at = traceback.extract_stack()[:-1]
         self.__setitem__(slice(i,i), [x], at=at, label=label, setHistory=setHistory)
@@ -157,25 +151,23 @@ class List(collections.MutableSequence):
             (val, stack, comment) = x
             print prefix, '  ', comment, '=', val
 
-        
-
 class ListField(Field):
     """
     Defines a field which is a container of values of type dtype
 
-    If length is not None, then instances of this field must match this length 
+    If length is not None, then instances of this field must match this length
     exactly.
-    If minLength is not None, then instances of the field must be no shorter 
+    If minLength is not None, then instances of the field must be no shorter
     then minLength
-    If maxLength is not None, then instances of the field must be no longer 
+    If maxLength is not None, then instances of the field must be no longer
     than maxLength
-    
+
     Additionally users can provide two check functions:
     listCheck - used to validate the list as a whole, and
-    itemCheck - used to validate each item individually    
+    itemCheck - used to validate each item individually
     """
     def __init__(self, doc, dtype, default=None, optional=False,
-            listCheck=None, itemCheck=None, 
+            listCheck=None, itemCheck=None,
             length=None, minLength=None, maxLength=None):
         if dtype not in Field.supportedTypes:
             raise ValueError("Unsupported dtype %s"%_typeStr(dtype))
@@ -190,7 +182,7 @@ class ListField(Field):
             if minLength is not None and maxLength is not None \
                     and minLength > maxLength:
                 raise ValueError("'maxLength' (%d) must be at least as large as 'minLength' (%d)"%(maxLength, minLength))
-        
+
         if listCheck is not None and not hasattr(listCheck, "__call__"):
             raise ValueError("'listCheck' must be callable")
         if itemCheck is not None and not hasattr(itemCheck, "__call__"):
@@ -204,7 +196,6 @@ class ListField(Field):
         self.length=length
         self.minLength=minLength
         self.maxLength=maxLength
-   
 
     def validate(self, instance):
         """
@@ -232,12 +223,8 @@ class ListField(Field):
 
     def _getListClass(self):
         return List
-            
+
     def __set__(self, instance, value, at=None, label="assignment"):
-        #print 'ListField.__set__:'
-        #print '  inst', type(instance)
-        #print '  value', value
-        
         if instance._frozen:
             raise FieldValidationError(self, instance, "Cannot modify a frozen Config")
 
@@ -254,16 +241,11 @@ class ListField(Field):
 
         print 'Actually setting value of', self.name, '=', value
         instance._storage[self.name] = value
-        # if value is not None:
-        #     print 'Adding history again'
-        #     print 'instance is', type(instance)
-        #     value._addHistory(at, label)
-    
-    def toDict(self, instance):        
-        value = self.__get__(instance)        
+
+    def toDict(self, instance):
+        value = self.__get__(instance)
         return list(value) if value is not None else None
 
-            
 class ListOfListField(ListField):
 
     def __init__(self, doc, dtype, **kwargs):
@@ -280,13 +262,8 @@ class ListOfListField(ListField):
 
         self._subfields = {}
         self._subtype = dtype
-        
-        #self._subfield = ListField('subfield of ListOfListField', dtype,
-        #        **kwargs)
-        #self._subfield.name = 'sublist'
-
         self._subconfig = Config()
-        
+
     def getSubfield(self, i):
         try:
             return self._subfields[i]
@@ -300,22 +277,14 @@ class ListOfListField(ListField):
 
     def getSubconfig(self, i):
         return self._subconfig
-    
+
     def _getListClass(self):
         return ListOfList
-        
-    #def __set__(self, instance, value, at=None, label="assignment"):
-    #    print 'LoLField.__set__'
-    #     print '  inst', type(instance)
-    #     print '  value', value
-    #    return super(ListOfListField, self).__set__(instance, value,
-    #                                                at=at, label=label)
 
 class SubList(List):
     def __init__(self, mylist, i, *args, **kwargs):
         self.__dict__['_mylist'] = mylist
         self.__dict__['_mylisti'] = i
-        #self._mylist = mylist
         super(SubList, self).__init__(*args, **kwargs)
 
     def _addHistory(self, at, label, selfOnly=False):
@@ -329,7 +298,7 @@ class ListOfList(List):
     def __init__(self, *args, **kwargs):
         print 'ListOfList constructor; delegating'
         super(ListOfList, self).__init__(*args, **kwargs)
-        
+
     def __set__(self, instance, value, at=None, label="assignment"):
         print 'ListOfList.__set__'
         super(ListOfList, self).__set__(instance, value, at=at, label=label)
@@ -339,12 +308,6 @@ class ListOfList(List):
         if not isinstance(x, basestring):
             try:
                 it = iter(x)
-                #field = self._field._subfield
-
-                # If my element at that position isn't already a list...
-                #if i < len(self._list) and isinstance(self._list[i], List):
-                #   return x
-
                 field = self._field.getSubfield(i)
                 config = self._field.getSubconfig(i)
 
@@ -353,22 +316,15 @@ class ListOfList(List):
                 print 'resetting history'
                 config._history[field.name] = []
                 print 'setHistory:', setHistory
-                
-                #lst = SubList(self, i, config, field, None, at, label, setHistory)
-                #lst[:] = x
 
                 lst = SubList(self, i, config, field, x, at, label, setHistory)
-
                 lst._addHistory(at, label, selfOnly=True)
-                
-                #lst = List(config, field, x, at, label, setHistory)
-                #print 'LoLField: transformed to', type(lst), lst
                 return lst
 
             except TypeError:
                 # not iterable, fine
                 pass
         return x
-    
+
     def _getHistoryEntry(self):
         return list([x._getHistoryEntry() for x in self._list])
