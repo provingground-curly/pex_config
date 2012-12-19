@@ -13,6 +13,7 @@ class Config1(pexConfig.Config):
 class ListOfListFieldTest(unittest.TestCase):
     def testConstructor(self):
         try:
+            # List of lists is good; list of list of lists is bad.  Go figure.
             class BadDtype(pexConfig.Config):
                 l = pexConfig.ListOfListField("bad", list)
         except:

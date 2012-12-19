@@ -260,17 +260,19 @@ class ListOfListField(ListField):
         the scalar type; "List" is assumed for the dtype of
         ListOfListField objects, naturally!
         '''
-        
-        ### FIXME
-        oldtypes = Field.supportedTypes
-        newtypes = oldtypes + (List,)
-        Field.supportedTypes = newtypes
-
         self._subkwargs = kwargs.pop('subkwargs', {})
 
-        super(ListOfListField, self).__init__(doc, List, **kwargs)
-
-        Field.supportedTypes = oldtypes
+        # The ListField class checks dtype against Field.supportedTypes,
+        # so lie to it about the dtype and then patch things up after.
+        # We do pass it the underlying dtype to check that though.
+        super(ListOfListField, self).__init__(doc, dtype, **kwargs)
+        source = traceback.extract_stack(limit=2)[0]
+        self._setup(doc=doc, dtype=ListOfList,
+                    default=kwargs.get('default', None),
+                    check=None,
+                    optional=kwargs.get('optional', False),
+                    source=source)
+        self.itemtype = SubList
 
         self._subfields = {}
         self._subtype = dtype
