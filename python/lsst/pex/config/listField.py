@@ -208,6 +208,11 @@ class ListField(Field):
         """
         Field.validate(self, instance)
         value = self.__get__(instance)
+
+        print 'validate: self=', type(self), self
+        print 'instance=', type(instance), instance
+        print 'value=', type(value), value
+
         if value is not None:
             lenValue =len(value)
             if self.length is not None and not lenValue == self.length:
@@ -240,6 +245,11 @@ class ListField(Field):
             history = instance._history.setdefault(self.name, [])
             history.append((value, at, label))
 
+        print '__set__:'
+        print '  instance:', type(instance)#, instance
+        print '  ._storage:', instance._storage
+        print '  self.name:', self.name
+            
         instance._storage[self.name] = value
 
     def toDict(self, instance):
@@ -255,7 +265,12 @@ class ListOfListField(ListField):
     '''
     
     def __init__(self, doc, dtype, **kwargs):
-
+        '''
+        Note, "dtype" is the datatype for the nested list; ie, it's
+        the scalar type; "List" is assumed for the dtype of
+        ListOfListField objects, naturally!
+        '''
+        
         ### FIXME
         oldtypes = Field.supportedTypes
         newtypes = oldtypes + (List,)
@@ -271,6 +286,26 @@ class ListOfListField(ListField):
         self._subtype = dtype
         self._subconfig = Config()
 
+    def validate(self, instance):
+        print 'ListOfListField.validate'
+        print '  self', self
+        print '  inst', type(instance), instance
+        print '  ._storage', instance._storage
+        super(ListOfListField, self).validate(instance)
+        val = self.__get__(instance)
+        print '  val:', type(val), val
+        #print '  subfields:', self._subfields
+        for i,x in enumerate(val):
+            print '  x:', type(x), x
+            sf = self.getSubfield(i)
+            print '  sf:', type(sf), sf
+            sc = self.getSubconfig(i)
+            print '  sc:', type(sc), sc
+            print '  ._storage', sc._storage
+            sc._storage[sf.name] = x
+            sf.validate(sc)
+            
+        
     def getSubfield(self, i):
         try:
             return self._subfields[i]
@@ -300,12 +335,19 @@ class ListOfList(List):
         # history -- this is not really the right place to do this.
 
         # First, test that the element is iterable:
-        it = iter(x)
-
+        try:
+            it = iter(x)
+        except TypeError: # TypeError: 'int' object is not iterable
+            raise FieldValidationError(self._field, self._config,
+                                       'A ListOfList element must be iterable')
+        if isinstance(x, basestring):
+            raise FieldValidationError(self._field, self._config,
+                                       'Cannot set a ListOfList element to a string')
+        
         field = self._field.getSubfield(i)
         config = self._field.getSubconfig(i)
         config._history[field.name] = []
-
+        
         lst = SubList(self, i, config, field, x, at, label, setHistory)
         lst._addHistory(at, label, selfOnly=True)
         return lst

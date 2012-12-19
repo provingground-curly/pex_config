@@ -9,7 +9,9 @@ class NConfig(Config):
     nlist = ListOfListField('nlist', int, default=[[1,],[9,]])
 
     polist = ListField('list', int)
-    
+
+    lenlist = ListOfListField('llist', int, minLength=2, default=[[42,],[100,]])
+
 nc = NConfig()
 
 print 'nlist history:'
@@ -101,3 +103,5 @@ nc.nlist.printHistory()
 nc.nlist[-1][1] = 777
 print
 nc.nlist.printHistory()
+
+nc.lenlist = []
