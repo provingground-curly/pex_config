@@ -50,7 +50,6 @@ class ListOfListFieldTest(unittest.TestCase):
         c = Config1()
         self.assertRaises(pexConfig.FieldValidationError, c.x.__setitem__, 2, 0)
         c.x[0][0] = 10
-        print 'c.x:', c.x
 
         self.assertEqual(c.x, [[10], [2, 3]])
         self.assertEqual(((10,), (2, 3)), c.x)

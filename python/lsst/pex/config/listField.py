@@ -208,11 +208,6 @@ class ListField(Field):
         """
         Field.validate(self, instance)
         value = self.__get__(instance)
-
-        print 'validate: self=', type(self), self
-        print 'instance=', type(instance), instance
-        print 'value=', type(value), value
-
         if value is not None:
             lenValue =len(value)
             if self.length is not None and not lenValue == self.length:
@@ -244,11 +239,6 @@ class ListField(Field):
         else:
             history = instance._history.setdefault(self.name, [])
             history.append((value, at, label))
-
-        print '__set__:'
-        print '  instance:', type(instance)#, instance
-        print '  ._storage:', instance._storage
-        print '  self.name:', self.name
             
         instance._storage[self.name] = value
 
@@ -287,24 +277,13 @@ class ListOfListField(ListField):
         self._subconfig = Config()
 
     def validate(self, instance):
-        print 'ListOfListField.validate'
-        print '  self', self
-        print '  inst', type(instance), instance
-        print '  ._storage', instance._storage
         super(ListOfListField, self).validate(instance)
         val = self.__get__(instance)
-        print '  val:', type(val), val
-        #print '  subfields:', self._subfields
         for i,x in enumerate(val):
-            print '  x:', type(x), x
             sf = self.getSubfield(i)
-            print '  sf:', type(sf), sf
             sc = self.getSubconfig(i)
-            print '  sc:', type(sc), sc
-            print '  ._storage', sc._storage
             sc._storage[sf.name] = x
             sf.validate(sc)
-            
         
     def getSubfield(self, i):
         try:
