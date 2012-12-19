@@ -69,4 +69,35 @@ print
 print 'NList[1] history:'
 nc.nlist[1].printHistory()
 
+try:
+    nc.nlist[1] = 4
+    print 'Uh oh, that was not supposed to work!'
+except:
+    print 'Good, that failed:'
+    import traceback
+    traceback.print_exc()
 
+print
+nc.nlist.printHistory()
+
+print
+nc.nlist[0] = [9,9,9]
+print
+nc.nlist.printHistory()
+
+print
+nc.nlist[0][1] = 6
+print
+nc.nlist.printHistory()
+
+nc.nlist = [ [6,6,6], [9,9,9,9], [111] ]
+print
+nc.nlist.printHistory()
+
+nc.nlist.append(nc.nlist[0])
+print
+nc.nlist.printHistory()
+
+nc.nlist[-1][1] = 777
+print
+nc.nlist.printHistory()

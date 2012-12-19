@@ -157,14 +157,16 @@ class ListField(Field):
 
     If length is not None, then instances of this field must match this length
     exactly.
+
     If minLength is not None, then instances of the field must be no shorter
-    then minLength
+    than minLength.
+
     If maxLength is not None, then instances of the field must be no longer
-    than maxLength
+    than maxLength.
 
     Additionally users can provide two check functions:
-    listCheck - used to validate the list as a whole, and
-    itemCheck - used to validate each item individually
+    * listCheck - used to validate the list as a whole, and
+    * itemCheck - used to validate each item individually
     """
     def __init__(self, doc, dtype, default=None, optional=False,
             listCheck=None, itemCheck=None,
@@ -233,23 +235,28 @@ class ListField(Field):
 
         if value is not None:
             ListClass = self._getListClass()
-            print 'Creating object of type', ListClass
             value = ListClass(instance, self, value, at, label)
         else:
             history = instance._history.setdefault(self.name, [])
             history.append((value, at, label))
 
-        print 'Actually setting value of', self.name, '=', value
         instance._storage[self.name] = value
 
     def toDict(self, instance):
         value = self.__get__(instance)
         return list(value) if value is not None else None
 
-class ListOfListField(ListField):
 
+class ListOfListField(ListField):
+    '''
+    A ListField subclass that can hold lists.  This turns out to result in
+    very messy history tracking, which is why this is in a separate class
+    rather than just added to ListField.
+    '''
+    
     def __init__(self, doc, dtype, **kwargs):
 
+        ### FIXME
         oldtypes = Field.supportedTypes
         newtypes = oldtypes + (List,)
         Field.supportedTypes = newtypes
@@ -269,6 +276,7 @@ class ListOfListField(ListField):
             return self._subfields[i]
         except:
             pass
+        # Create a new empty one
         sf = ListField('subfield[%i] of ' + self.name, self._subtype,
                        **self._subkwargs)
         sf.name = '%s[%i]' % (self.name, i)
@@ -281,50 +289,43 @@ class ListOfListField(ListField):
     def _getListClass(self):
         return ListOfList
 
+class ListOfList(List):
+    '''
+    Used internally; ListOfListField objects actually hold
+    "ListOfList" objects, not plain old Python lists; this allows the
+    type checking and history tracking that we *ahem* love.
+    '''
+    def _transform(self, x, i, at, label, setHistory):
+        # Convert a list element into a SubList object; also reset its
+        # history -- this is not really the right place to do this.
+
+        # First, test that the element is iterable:
+        it = iter(x)
+
+        field = self._field.getSubfield(i)
+        config = self._field.getSubconfig(i)
+        config._history[field.name] = []
+
+        lst = SubList(self, i, config, field, x, at, label, setHistory)
+        lst._addHistory(at, label, selfOnly=True)
+        return lst
+
+    def _getHistoryEntry(self):
+        return list([x._getHistoryEntry() for x in self._list])
+
 class SubList(List):
+    '''
+    This subclass exists for history tracking of nested lists: we tell
+    our parent List about changes.
+    '''
     def __init__(self, mylist, i, *args, **kwargs):
+        # _mylist is the parent list; [i] is my position in that list.
         self.__dict__['_mylist'] = mylist
         self.__dict__['_mylisti'] = i
         super(SubList, self).__init__(*args, **kwargs)
 
     def _addHistory(self, at, label, selfOnly=False):
-        print 'SubList: adding to my history'
         super(SubList, self)._addHistory(at, label)
         if not selfOnly:
-            print 'SubList: adding to parent history'
             self._mylist._addHistory(at, label + '[%i]'%self._mylisti)
 
-class ListOfList(List):
-    def __init__(self, *args, **kwargs):
-        print 'ListOfList constructor; delegating'
-        super(ListOfList, self).__init__(*args, **kwargs)
-
-    def __set__(self, instance, value, at=None, label="assignment"):
-        print 'ListOfList.__set__'
-        super(ListOfList, self).__set__(instance, value, at=at, label=label)
-
-    def _transform(self, x, i, at, label, setHistory):
-        # convert iterables (except strings) to List objects
-        if not isinstance(x, basestring):
-            try:
-                it = iter(x)
-                field = self._field.getSubfield(i)
-                config = self._field.getSubconfig(i)
-
-                print 'Creating new List object for', field.name #, '[%i]' % i
-
-                print 'resetting history'
-                config._history[field.name] = []
-                print 'setHistory:', setHistory
-
-                lst = SubList(self, i, config, field, x, at, label, setHistory)
-                lst._addHistory(at, label, selfOnly=True)
-                return lst
-
-            except TypeError:
-                # not iterable, fine
-                pass
-        return x
-
-    def _getHistoryEntry(self):
-        return list([x._getHistoryEntry() for x in self._list])
