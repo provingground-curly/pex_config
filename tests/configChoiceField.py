@@ -122,6 +122,9 @@ class ConfigChoiceFieldTest(unittest.TestCase):
                 pexConfig.FieldValidationError, 
                 setattr, self.config.c, "names", "AAA")
         self.config.c.names=["AAA"]
+        self.assertRaises(
+                pexConfig.FieldValidationError, 
+                self.config.c.names.add, "CAW")
 
     def testNoneValue(self):
         self.config.a=None
