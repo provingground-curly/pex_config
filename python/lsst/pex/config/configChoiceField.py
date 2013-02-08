@@ -38,7 +38,7 @@ class SelectionSet(collections.MutableSet):
     def __init__(self, dict_, value, at=None, label="assignment", setHistory=True):
         if at is None:
             at = traceback.extract_stack()[:-1]
-        self._dict = dict_;
+        self._dict = dict_
         self._field = self._dict._field
         self._config = self._dict._config
         self.__history = self._config._history.setdefault(self._field.name, [])
