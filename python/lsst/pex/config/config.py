@@ -26,10 +26,68 @@ import sys
 import math
 import collections
 import copy
+import re
 
 from .comparison import *
 
-__all__ = ("Config", "Field", "FieldValidationError")
+__all__ = ("Config", "Field", "FieldValidationError", "load", "loadFromStream")
+
+def guessClassFromStream(stream):
+    """
+    Attempt to guess the correct config class from a saved config stream.
+    
+    This looks for a line of the form:
+    @code
+    assert(type(root)==<module.class>)
+    @endcode
+    If it finds such a line, it tries to import the module, and returns
+    the class if successful.  Returns None on failure.
+    """
+    try:
+        regex = re.compile("assert\(type\(\w+\)\s*==\s*(?P<cls>[\w\.]+)\)")
+        for line in stream:
+            m = regex.search(line)
+            if m:
+                s = m.group("cls").split(".")
+                module = __import__(".".join(s[:-1]), globals(), locals(), [s[-1]], -1)
+                cls = getattr(module, s[-1])
+                return cls
+        return None
+    except (ImportError, AttributeError):
+        return None
+
+def guessClass(filename):
+    """
+    Attempt to guess the correct config class from a saved config file.
+    
+    This looks for a line of the form:
+    @code
+    assert(type(root)==<module.class>)
+    @endcode
+    If it finds such a line, it tries to import the module, and returns
+    the class if successful.  Returns None on failure.
+    """
+    with open(filename, 'r') as stream:
+        return guessClassFromStream(stream)
+
+def loadFromStream(stream, root="root"):
+    """
+    Load a config object from a stream, using guessClassFromStream to determine the class.
+    """
+    cls = guessClassFromStream(stream)
+    if cls is None:
+        raise RuntimeError("Cannot infer config class name from stream.")
+    config = cls()
+    config.loadFromStream(stream, root=root)
+    return config
+
+def load(filename, root="root"):
+    cls = guessClass(filename)
+    if cls is None:
+        raise RuntimeError("Cannot infer config class name from file.")
+    config = cls()
+    config.load(filename, root=root)
+    return config
 
 def _joinNamePath(prefix=None, name=None, index=None):
     """
