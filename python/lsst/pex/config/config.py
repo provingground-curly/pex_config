@@ -44,7 +44,7 @@ def guessClassFromStream(stream):
     the class if successful.  Returns None on failure.
     """
     try:
-        regex = re.compile("assert\(?type\(\w+\)\s*==\s*(?P<cls>[\w\.]+)\)?")
+        regex = re.compile("assert\s*\(?type\(\w+\)\s*==\s*(?P<cls>[\w\.]+)\)?")
         for line in stream:
             m = regex.search(line)
             if m:
