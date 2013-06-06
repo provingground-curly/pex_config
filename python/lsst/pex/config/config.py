@@ -84,7 +84,7 @@ def loadFromStream(stream, root="root"):
 def load(filename, root="root"):
     cls = guessClass(filename)
     if cls is None:
-        raise RuntimeError("Cannot infer config class name from file.")
+        raise RuntimeError("Cannot infer config class name from file %s" % filename)
     config = cls()
     config.load(filename, root=root)
     return config
