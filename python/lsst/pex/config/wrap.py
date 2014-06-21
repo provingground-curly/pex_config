@@ -124,6 +124,7 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
         if "Control" not in ctrl.__name__:
             raise ValueError("Cannot guess appropriate Config class name for %s." % ctrl)
         name = ctrl.__name__.replace("Control", "Config")
+    overrideDefaults = None
     if cls is None:
         cls = type(name, (base,), {"__doc__":doc})
         if module is not None:
@@ -141,6 +142,8 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
                 moduleName = moduleObj.__name__
             cls.__module__ = moduleName
             setattr(moduleObj, name, cls)
+    elif hasattr(cls, "setDefaults"):
+        overrideDefaults = cls.setDefaults
     if doc is None:
         doc = ctrl.__doc__
     fields = {}
@@ -229,6 +232,8 @@ def makeConfigClass(ctrl, name=None, base=Config, doc=None, module=1, cls=None):
                              __reset=True)
         except:
             pass # if we can't instantiate the Control, don't set defaults
+        if overrideDefaults:
+            overrideDefaults(self)
 
     ctrl.ConfigClass = cls
     cls.Control = ctrl
