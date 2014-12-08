@@ -70,6 +70,9 @@ class Complex(pexConfig.Config):
     p = pexConfig.ConfigChoiceField("another registry", typemap=GLOBAL_REGISTRY,
                                     default="BBB", optional=True)
 
+class TestDoc(pexConfig.Config):
+    doc1 = pexConfig.Field("Doc with 'quotes' in it", str, default = "Test string 1")
+    doc2 = pexConfig.Field("Doc end with 'quote'", str, default = "Test string 2")
 
 class ConfigTest(unittest.TestCase):
     def setUp(self): 
@@ -341,6 +344,19 @@ except ImportError:
         self.assert_("Inequality in c.f" in output)
         self.assert_("Inequality in r['AAA']" in output)
         self.assert_("Inequality in r['BBB']" not in output)
+
+    def testDoc(self):
+
+        # Make sure docs can be read and written
+        doc1 = TestDoc()
+        doc1.save('roundtrip.test')
+        doc2 = TestDoc()
+        doc2.load('roundtrip.test')
+        self.assertEqual(doc1,doc2)
+        os.remove('roundtrip.test')
+        # This should fail because of triple quotes
+        self.assertRaises(ValueError, pexConfig.Field, "Doc with '''triple''' quotes in it",
+                          str, default = "Test string 3")
 
 def suite():
     utilsTests.init()
