@@ -44,6 +44,7 @@ class Simple(pexConfig.Config):
     d = pexConfig.DictField("dict test", str, str, default={"key":"value"}, 
             itemCheck=lambda x: x.startswith('v'))
     n = pexConfig.Field("nan test", float, default=float("NAN"))
+    m = pexConfig.Field(None, int, optional=True)
 
 GLOBAL_REGISTRY["AAA"] = Simple
 
@@ -73,6 +74,7 @@ class Complex(pexConfig.Config):
 class TestDoc(pexConfig.Config):
     doc1 = pexConfig.Field("Doc with 'quotes' in it", str, default = "Test string 1")
     doc2 = pexConfig.Field("Doc end with 'quote'", str, default = "Test string 2")
+    doc3 = pexConfig.Field(None, str, default = "Test string 3")
 
 class ConfigTest(unittest.TestCase):
     def setUp(self): 
@@ -356,7 +358,7 @@ except ImportError:
         os.remove('roundtrip.test')
         # This should fail because of triple quotes
         self.assertRaises(ValueError, pexConfig.Field, "Doc with '''triple''' quotes in it",
-                          str, default = "Test string 3")
+                          str, default = "Test string 4")
 
 def suite():
     utilsTests.init()
