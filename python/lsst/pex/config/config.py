@@ -243,7 +243,10 @@ class Field(object):
         fullname = _joinNamePath(instance._name, self.name)
 
         # write documentation as multiline string
-        doc = "'''" + str(self.doc) + " '''"
+        if (outfile.isatty()):   # omit triple single quotes when writing to a terminal
+            doc = str(self.doc)
+        else:
+            doc = "'''" + str(self.doc) + " '''"
         if isinstance(value, float) and (math.isinf(value) or math.isnan(value)):
             # non-finite numbers need special care
             print >> outfile, "%s\n%s=float('%r')\n"%(doc, fullname, value)
