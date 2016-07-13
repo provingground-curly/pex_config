@@ -34,25 +34,22 @@ class WrapTest(unittest.TestCase):
         config.foo = 2
         config.bar.append("baz")
         control = config.makeControl()
-        self.assert_(testLib.checkControl(control, config.foo, config.bar))
+        self.assert_(testLib.checkControl(control, config.foo, config.bar.list()))
 
     def testReadControl(self):
         """Test reading the values from a C++ Control object into a Config object."""
-        vec = testLib.StringVec()
-        vec.push_back("zot")
-        vec.push_back("yox")
         control = testLib.ControlObject()
         control.foo = 3
-        control.bar = vec
+        control.bar = ["zot", "yox"]
         config = testLib.ConfigObject()
         config.readControl(control)
-        self.assert_(testLib.checkControl(control, config.foo, config.bar))
+        self.assert_(testLib.checkControl(control, config.foo, config.bar.list()))
 
     def testDefaults(self):
         """Test that C++ Control object defaults are correctly used as defaults for Config objects."""
         config = testLib.ConfigObject()
         control = testLib.ControlObject()
-        self.assert_(testLib.checkControl(control, config.foo, config.bar))
+        self.assert_(testLib.checkControl(control, config.foo, config.bar.list()))
 
 class NestedWrapTest(unittest.TestCase):
 

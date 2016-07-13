@@ -143,7 +143,7 @@ class Field(object):
     class Example(Config):
         myInt = Field(int, "an integer field!", default=0)
     """
-    supportedTypes=(str, bool, float, int, complex)
+    supportedTypes=(str, unicode, basestring, bool, float, int, complex)
 
     def __init__(self, doc, dtype, default=None, check=None, optional=False):
         """Initialize a Field.
