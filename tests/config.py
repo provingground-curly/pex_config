@@ -322,7 +322,7 @@ class ConfigTest(unittest.TestCase):
 
 
     def testImports(self):
-        importing = "import lsst.daf.base.citizen\n" # A module not used by anything else, but which exists
+        importing = "import lsst.pex.config._doNotImportMe\n" # A module not used by anything else, but which exists
         self.checkImportRoundTrip(importing, importing, True)
 
     def testBadImports(self):
