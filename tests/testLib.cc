@@ -101,9 +101,8 @@ PYBIND11_PLUGIN(_testLib) {
         .def_static("_doc_bar", &ControlObject::_doc_bar)
         .def_static("_type_bar", &ControlObject::_type_bar)
         .def_property("bar",
-                [](ControlObject &c){return ListView<std::string>(&(c.bar));},
-                [](ControlObject &c, std::vector<std::string> &v){c.bar = v;},
-                py::keep_alive<0, 1>());
+                py::cpp_function([](ControlObject &c){return ListView<std::string>(&(c.bar));}, py::keep_alive<0, 1>()),
+                py::cpp_function([](ControlObject &c, std::vector<std::string> &v){c.bar = v;}));
 
     mod.def("checkControl", &checkControl);
     mod.def("checkNestedControl", &checkNestedControl);
