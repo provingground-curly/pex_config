@@ -21,8 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_PEX_CONFIG_PYBIND11_H
-#define LSST_PEX_CONFIG_PYBIND11_H
+#ifndef LSST_PEX_CONFIG_PYTHON_H
+#define LSST_PEX_CONFIG_PYTHON_H
 
 /**
  * Macro used to wrap fields declared by `LSST_CONTROL_FIELD` using Pybind11.
