@@ -287,27 +287,6 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(III.a.default, 5)
         self.assertEqual(AAA.a.default, 4)
 
-    def testConvert(self):
-        pol = pexConfig.makePolicy(self.simple)
-        self.assertEqual(pol.exists("i"), False)
-        self.assertEqual(pol.get("f"), self.simple.f)
-        self.assertEqual(pol.get("b"), self.simple.b)
-        self.assertEqual(pol.get("c"), self.simple.c)
-        self.assertEqual(pol.getArray("ll"), list(self.simple.ll))
-
-        ps = pexConfig.makePropertySet(self.simple)
-        self.assertEqual(ps.exists("i"), False)
-        self.assertEqual(ps.getScalar("f"), self.simple.f)
-        self.assertEqual(ps.getScalar("b"), self.simple.b)
-        self.assertEqual(ps.getScalar("c"), self.simple.c)
-        self.assertEqual(list(ps.getArray("ll")), list(self.simple.ll))
-
-        pol = pexConfig.makePolicy(self.comp)
-        self.assertEqual(pol.get("c.f"), self.comp.c.f)
-
-        ps = pexConfig.makePropertySet(self.comp)
-        self.assertEqual(ps.getScalar("c.f"), self.comp.c.f)
-
     def testFreeze(self):
         self.comp.freeze()
 

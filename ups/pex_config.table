@@ -1,5 +1,4 @@
 setupRequired(daf_base)
-setupRequired(pex_policy)
 setupRequired(numpy)
 setupRequired(utils)
 setupRequired(pybind11)
