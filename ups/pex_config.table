@@ -1,9 +1,6 @@
 setupRequired(daf_base)
 setupRequired(pex_policy)
-setupRequired(numpy)
 setupRequired(utils)
-setupRequired(pybind11)
-setupRequired(python)
 
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
